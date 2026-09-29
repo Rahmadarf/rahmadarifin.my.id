@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/auth/admin";
 import { getOwnProfile } from "@/lib/data/admin";
 import { PanelHeader } from "@/components/admin/panel-header";
 import { ProfileForm } from "@/components/admin/profile-form";
+import { CleanupMediaButton } from "@/components/admin/cleanup-media-button";
 
 export const metadata = { title: "Profile — Admin" };
 
@@ -20,6 +21,7 @@ export default async function AdminProfilePage() {
         profile={profile}
         photoUrl={photoUrl}
       />
+      <CleanupMediaButton />
     </>
   );
 }
