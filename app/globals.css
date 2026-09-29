@@ -88,4 +88,26 @@
 @layer base {
   * { @apply border-border outline-ring/50; }
   body { @apply bg-background text-foreground font-sans; }
+  h1, h2, h3 { letter-spacing: -0.02em; }
+  html { scroll-behavior: smooth; }
+}
+
+@layer utilities {
+  /* Low-opacity dot grid from the design, used on Hero and Contact. */
+  .dot-grid {
+    background-image: radial-gradient(
+      circle,
+      var(--dot-grid-color) 1.5px,
+      transparent 1.5px
+    );
+    background-size: 24px 24px;
+  }
+}
+
+:root {
+  --dot-grid-color: rgba(0, 0, 0, 0.08);
+}
+
+.dark {
+  --dot-grid-color: rgba(255, 255, 255, 0.07);
 }

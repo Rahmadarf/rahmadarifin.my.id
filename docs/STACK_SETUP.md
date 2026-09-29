@@ -33,10 +33,23 @@ Komponen shadcn berada di `components/ui`; `cn()` di `lib/utils.ts`. `Providers`
 
 Token UI memakai putih, netral, aksen biru, radius, serta font Inter/Fira Code sesuai prototipe. Tema gelap memakai `.dark`. Font diunduh melalui `next/font` saat build dan disajikan dari aplikasi.
 
+## Struktur aplikasi
+
+Halaman publik ada di route group `app/(site)`: beranda, `/projects`, dan `/projects/[slug]`. Panel admin ada di `app/admin/(panel)` dengan tab Projects, Timeline, Tech Stack, Social Links, dan Profile; halaman login berada di `app/admin/login` agar tetap terjangkau saat belum masuk.
+
+Pembacaan publik memakai client tanpa cookie (`lib/supabase/anon.ts`) sehingga halaman publik tetap bisa di-cache dan hanya melihat baris published. Pembacaan dan penulisan admin memakai client bersesi (`lib/supabase/server.ts`). Setiap Server Action memanggil `requireAdmin()` sendiri, bukan mengandalkan layout.
+
+Detail skema, policy RLS, dan izin Storage ada di [DATABASE.md](DATABASE.md).
+
 ## Tahap berikutnya
 
-Konversi halaman portofolio dan admin ke komponen React, buat struktur database serta migration/RLS, atur bucket dan izin Storage, lalu implementasikan login dan CRUD. Database dan akses Storage harus membatasi perubahan pada UUID pemilik dan hanya memberikan pembacaan publik untuk konten published. Daftar ADMIN_USER_IDS di server tidak otomatis membuat kebijakan database.
+Yang masih perlu dikerjakan di proyek Supabase Anda:
 
-Setup ini belum membuat tabel, bucket, halaman login, atau akun Supabase. Autentikasi, koneksi database, serta upload live diuji setelah konfigurasi proyek tersedia. Vercel dapat mengimpor repository ini; tambahkan environment yang sama saat deploy.
+1. Jalankan ketiga migration di `supabase/migrations/`, lalu opsional `supabase/seed.sql` setelah mengganti `v_owner` dengan UUID akun Anda.
+2. Buat akun pemilik di Supabase Auth dan matikan pendaftaran publik.
+3. Pastikan UUID akun itu ada di `ADMIN_USER_IDS`.
+4. Masuk ke `/admin/login`, lalu uji CRUD dan upload gambar.
+
+Autentikasi, koneksi database, dan upload belum diuji terhadap database live karena tabelnya belum dibuat di proyek Supabase. Vercel dapat mengimpor repository ini; tambahkan environment yang sama saat deploy.
 
 Referensi: https://supabase.com/docs/guides/auth/server-side/creating-a-client · https://ui.shadcn.com/docs/installation/next
