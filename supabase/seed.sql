@@ -9,7 +9,7 @@
 
 do $$
 declare
-  v_owner uuid := '00000000-0000-0000-0000-000000000000';
+  v_owner uuid := '79b51584-d316-4277-9ac3-ffe9e9978d41';
 begin
   if not exists (select 1 from auth.users where id = v_owner) then
     raise exception
