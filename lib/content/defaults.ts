@@ -47,6 +47,10 @@ export const MONOGRAM = "RAS";
 // links to fit alongside it.
 export const BRAND_NAME = "Rahmad Arifin";
 
+// Shown on the splash screen. Short on purpose — DEFAULT_PROFILE.role_title is
+// a full sentence, which does not fit the design's two-line lockup.
+export const SPLASH_TAGLINE = "Software Developer";
+
 export const PLACEHOLDER_CERTIFICATIONS =
   "[ To be filled in — formal certifications (bootcamp/course) or a list of core focus areas ]";
 

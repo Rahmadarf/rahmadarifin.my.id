@@ -92,6 +92,46 @@
   html { scroll-behavior: smooth; }
 }
 
+/* Splash screen ------------------------------------------------------------
+   The overlay is always in the markup so the decision can be made before
+   paint by an attribute on <html>, and so crawlers still receive the real
+   page underneath it.
+
+   Visibility hangs off that one attribute for the whole life of the splash,
+   including its fade-out — React removes the attribute only once the fade has
+   finished. An earlier version also keyed off a `data-live` attribute driven
+   by React state, which differed between the server and the client and so was
+   reported as a hydration mismatch and left at the server's value, hiding the
+   splash entirely. */
+.splash-overlay {
+  display: none;
+}
+
+html[data-splash="show"] .splash-overlay {
+  display: flex;
+}
+
+@keyframes splash-equaliser {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+.splash-bar {
+  width: 7px;
+  height: 48px;
+  border-radius: 4px;
+  background: var(--color-primary);
+  transform-origin: bottom center;
+  animation: splash-equaliser 1.1s ease-in-out infinite;
+}
+
 @layer utilities {
   /* Low-opacity dot grid from the design, used on Hero and Contact. */
   .dot-grid {
