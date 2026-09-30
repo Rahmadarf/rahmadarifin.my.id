@@ -29,7 +29,9 @@ export function HeroSection({
           </div>
         ) : null}
 
-        <h1 className="text-4xl font-extrabold leading-[1.08] tracking-[-0.02em] sm:text-5xl md:text-[64px]">
+        {/* 64px is the design's desktop size; it needs more steps than one
+            breakpoint to stay readable down at 320px. */}
+        <h1 className="text-3xl font-extrabold leading-[1.1] tracking-[-0.02em] sm:text-4xl md:text-5xl md:leading-[1.08] lg:text-[64px]">
           {profile.hero_headline}
         </h1>
 
@@ -282,7 +284,7 @@ export function ContactSection({
       id="contact"
       className="mx-auto w-full max-w-[1080px] px-6 pb-28 md:px-0 md:pb-30"
     >
-      <div className="dot-grid flex flex-col items-center gap-4.5 rounded-2xl border border-border bg-gradient-to-b from-surface to-surface-alt p-10 text-center md:p-14">
+      <div className="dot-grid flex flex-col items-center gap-4.5 rounded-2xl border border-border bg-gradient-to-b from-surface to-surface-alt p-6 text-center sm:p-10 md:p-14">
         <h2 className="text-[26px] font-bold tracking-[-0.02em] md:text-[32px]">
           {profile.contact_heading}
         </h2>
@@ -293,12 +295,14 @@ export function ContactSection({
           </p>
         ) : null}
 
+        {/* A long address overflowed the card on a 375px screen, so the label
+            may wrap and starts a step smaller. */}
         {email ? (
           <a
             href={`mailto:${email}`}
-            className="mt-2 flex items-center gap-2 rounded-[10px] bg-primary px-7 py-3.5 text-[15px] font-semibold text-primary-foreground transition hover:brightness-110"
+            className="mt-2 flex max-w-full items-center justify-center gap-2 rounded-[10px] bg-primary px-5 py-3.5 text-[13px] font-semibold break-all text-primary-foreground transition hover:brightness-110 sm:px-7 sm:text-[15px]"
           >
-            <Mail className="size-4" />
+            <Mail className="size-4 shrink-0" />
             {email}
           </a>
         ) : null}

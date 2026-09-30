@@ -19,7 +19,11 @@ export function AdminSidebar({ email }: { email: string | null }) {
   const pathname = usePathname();
 
   return (
-    <aside className="flex shrink-0 flex-col gap-7 border-b border-border bg-background p-5 md:h-dvh md:w-60 md:border-b-0 md:border-r md:sticky md:top-0 md:py-7">
+    // The fixed 240px rail only pays for itself once there is room left for the
+    // forms beside it. At iPad-portrait width it left ~528px, so the rail now
+    // starts at `lg` and smaller screens get a top bar instead — the same
+    // breakpoint the public navbar switches at.
+    <aside className="sticky top-0 z-20 flex shrink-0 flex-col gap-4 border-b border-border bg-background p-5 lg:h-dvh lg:w-60 lg:gap-7 lg:border-b-0 lg:border-r lg:py-7">
       <div className="flex items-center gap-2.5">
         <div className="flex size-[34px] items-center justify-center rounded-full border border-primary/30 bg-accent font-mono text-[13px] font-semibold text-primary">
           {MONOGRAM}
@@ -34,7 +38,10 @@ export function AdminSidebar({ email }: { email: string | null }) {
         </div>
       </div>
 
-      <nav className="flex gap-1 overflow-x-auto md:flex-col">
+      {/* Five tabs do not fit across a phone, so they scroll sideways below
+          `lg`. The scrollbar itself is hidden because it would sit on top of
+          the tab labels on macOS. */}
+      <nav className="-mx-5 flex gap-1 overflow-x-auto px-5 [scrollbar-width:none] lg:mx-0 lg:flex-col lg:px-0 [&::-webkit-scrollbar]:hidden">
         {TABS.map((tab) => {
           const active = pathname === tab.href;
           return (
@@ -43,7 +50,7 @@ export function AdminSidebar({ email }: { email: string | null }) {
               href={tab.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "shrink-0 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors",
+                "flex min-h-11 shrink-0 items-center rounded-lg px-3 text-sm font-semibold transition-colors",
                 active
                   ? "bg-accent text-primary"
                   : "text-text-secondary hover:bg-surface hover:text-foreground",
@@ -55,10 +62,10 @@ export function AdminSidebar({ email }: { email: string | null }) {
         })}
       </nav>
 
-      <div className="flex flex-col gap-0.5 border-t border-border pt-4 md:mt-auto">
+      <div className="flex flex-row gap-3 border-t border-border pt-3 lg:mt-auto lg:flex-col lg:gap-0.5 lg:pt-4">
         <Link
           href="/"
-          className="flex items-center gap-2 px-3 py-2.5 text-[13px] font-medium text-text-secondary hover:text-foreground"
+          className="flex min-h-11 items-center gap-2 px-3 text-[13px] font-medium text-text-secondary hover:text-foreground"
         >
           <ExternalLink className="size-3.5" strokeWidth={2.2} />
           View Site
@@ -67,7 +74,7 @@ export function AdminSidebar({ email }: { email: string | null }) {
         <form action={signOut}>
           <button
             type="submit"
-            className="flex w-full items-center gap-2 px-3 py-2.5 text-[13px] font-medium text-text-secondary hover:text-foreground"
+            className="flex min-h-11 w-full items-center gap-2 px-3 text-[13px] font-medium text-text-secondary hover:text-foreground"
           >
             <LogOut className="size-3.5" strokeWidth={2.2} />
             Log Out
