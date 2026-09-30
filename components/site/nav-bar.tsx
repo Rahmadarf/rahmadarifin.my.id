@@ -7,7 +7,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { MONOGRAM } from "@/lib/content/defaults";
+import { BRAND_NAME, MONOGRAM } from "@/lib/content/defaults";
 import { ThemeToggle } from "@/components/site/theme-toggle";
 
 // Floating pill navbar from the design: fixed top-centre, blurred glass.
@@ -67,12 +67,22 @@ export function NavBar() {
         aria-label="Navigasi utama"
         className="fixed left-1/2 top-4 z-50 flex w-[calc(100vw-1.5rem)] max-w-md -translate-x-1/2 items-center justify-between gap-3 rounded-full border border-border bg-background/75 py-2.5 pl-3 pr-2.5 shadow-[0_4px_24px_rgba(0,0,0,0.10)] backdrop-blur-xl sm:top-6 lg:w-auto lg:max-w-none lg:justify-start lg:gap-7 lg:pl-5"
       >
+        {/* Monogram plus name. The monogram is decorative once the name is
+            visible, so it is hidden from assistive tech and the link is named
+            by its text. */}
         <Link
           href="/"
-          aria-label="Home"
-          className="flex size-8 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-accent font-mono text-[13px] font-semibold text-primary"
+          className="flex min-w-0 shrink items-center gap-2.5 lg:shrink-0"
         >
-          {MONOGRAM}
+          <span
+            aria-hidden
+            className="flex size-8 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-accent font-mono text-[13px] font-semibold text-primary"
+          >
+            {MONOGRAM}
+          </span>
+          <span className="truncate text-sm font-semibold tracking-tight">
+            {BRAND_NAME}
+          </span>
         </Link>
 
         <div className="hidden items-center gap-7 lg:flex">
