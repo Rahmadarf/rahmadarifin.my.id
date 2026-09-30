@@ -13,8 +13,10 @@ import { ThemeToggle } from "@/components/site/theme-toggle";
 // Floating pill navbar from the design: fixed top-centre, blurred glass.
 // Section links resolve against the home page so they keep working from the
 // projects routes.
+// No "Home" entry: the monogram and name beside it already link to the home
+// page, and the old entry pointed at /#about, so its label did not describe
+// where it went.
 const LINKS = [
-  { label: "Home", href: "/#about" },
   { label: "Projects", href: "/projects" },
   { label: "Skills", href: "/#skills" },
   { label: "Experience", href: "/#journey" },
