@@ -122,7 +122,9 @@ export function NavBar() {
             }
           }}
           className={cn(
-            "fixed left-1/2 top-4 z-40 w-[calc(100vw-1.5rem)] max-w-md -translate-x-1/2 overflow-hidden rounded-[28px] border border-border bg-background pb-2 shadow-[0_16px_44px_rgba(0,0,0,0.22)] data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:slide-in-from-top-4 sm:top-6 lg:hidden",
+            // Radix keeps the sheet mounted until the closing animation ends,
+            // so it rolls back up behind the pill instead of vanishing.
+            "fixed left-1/2 top-4 z-40 w-[calc(100vw-1.5rem)] max-w-md -translate-x-1/2 overflow-hidden rounded-[28px] border border-border bg-background pb-2 shadow-[0_16px_44px_rgba(0,0,0,0.22)] data-[state=open]:animate-nav-sheet-down data-[state=closed]:animate-nav-sheet-up sm:top-6 lg:hidden",
             SHEET_TOP_PADDING,
           )}
         >

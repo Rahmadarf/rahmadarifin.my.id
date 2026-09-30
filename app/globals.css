@@ -92,6 +92,28 @@
   html { scroll-behavior: smooth; }
 }
 
+/* The mobile nav sheet unrolls downwards from behind the navbar pill.
+   Clipping rather than translating means the links stay put while the sheet
+   reveals them, so nothing slides across the pill or squashes mid-animation.
+   The radius matches the sheet's own rounded-[28px]. */
+@keyframes nav-sheet-roll-down {
+  from {
+    clip-path: inset(0 0 100% 0 round 28px);
+  }
+  to {
+    clip-path: inset(0 0 0 0 round 28px);
+  }
+}
+
+@keyframes nav-sheet-roll-up {
+  from {
+    clip-path: inset(0 0 0 0 round 28px);
+  }
+  to {
+    clip-path: inset(0 0 100% 0 round 28px);
+  }
+}
+
 @layer utilities {
   /* Low-opacity dot grid from the design, used on Hero and Contact. */
   .dot-grid {
@@ -101,6 +123,30 @@
       transparent 1.5px
     );
     background-size: 24px 24px;
+  }
+}
+
+/* `@utility`, not a plain class in `@layer utilities`: only registered
+   utilities can be used with variants, and these are applied through
+   `data-[state=open]:` / `data-[state=closed]:`. The reduced-motion override
+   is nested for the same reason — a separate `.animate-nav-sheet-down` rule
+   would never match the variant's class name. */
+@utility animate-nav-sheet-down {
+  /* `backwards`, not `both`: holding the end state would keep clip-path
+     applied at rest, which clips the sheet's own drop shadow away. */
+  animation: nav-sheet-roll-down 280ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 1ms;
+  }
+}
+
+@utility animate-nav-sheet-up {
+  /* `forwards` here, so the sheet stays rolled up until Radix unmounts it. */
+  animation: nav-sheet-roll-up 180ms cubic-bezier(0.4, 0, 1, 1) forwards;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 1ms;
   }
 }
 
