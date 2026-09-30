@@ -27,7 +27,7 @@ akhir splash dan awal animasi navbar dirancang sebagai satu gerakan.
 
 ## Splash screen pembuka
 
-Status: ide pengembangan selanjutnya, menunggu desain.
+Status: rancangan visual sedang dirinci; implementasi belum dimulai.
 
 ### Pemicu
 
@@ -53,12 +53,42 @@ kunjungan baru.
 - Selama splash tampil, lakukan prefetch halaman `/projects` tanpa menunggu
   hasilnya. Prefetch yang gagal atau lambat tidak boleh menahan splash, dan
   kunjungan langsung ke `/projects` tetap harus berfungsi.
-- Durasi maksimum tetap. Akhir splash menyalakan animasi masuk navbar supaya
-  keduanya terbaca sebagai satu gerakan.
+- Setelah data penting untuk halaman yang dibuka siap, jalankan transisi dot
+  sebelum menampilkan halaman. Tetapkan batas waktu agar kegagalan jaringan
+  tidak membuat splash tertahan tanpa akhir; prefetch rute lain tidak termasuk
+  syarat selesai.
+- Akhir splash menyalakan animasi masuk navbar supaya keduanya terbaca sebagai
+  satu gerakan.
 - Hormati `prefers-reduced-motion`.
 - Keputusan tampil atau tidak diambil sebelum paint melalui skrip inline kecil,
   sebagaimana next-themes menentukan tema. Menundanya ke efek React akan
   memunculkan kedipan splash.
+
+### Desain visual dan urutan transisi
+
+- Di tengah layar, tampilkan lima bar warna biru utama situs yang naik-turun
+  bergantian. Di bawahnya, peran seperti “Software Developer”, “Minecraft Plugin
+  Developer”, dan “Vibe Coder” berganti dalam area teks dengan tinggi tetap.
+- Pergantian peran bergerak vertikal: teks lama naik dan keluar dari area teks,
+  lalu teks baru masuk dari bawah dan menetap di tengah. Bar dan tata letak
+  halaman tidak ikut bergeser. Pergantian berulang selama splash berlangsung,
+  tanpa menahan akhir splash sampai seluruh peran selesai tampil.
+- Latar memakai dot dengan ritme dan warna yang konsisten dengan hero. Dot
+  bergerak sebagai gelombang halus dengan variasi organik, bukan kedipan atau
+  gerakan acak yang terpisah pada setiap dot.
+- Ketika splash selesai, dot di bagian tengah seolah ditekan sesaat. Tekanan
+  membuka celah melingkar dari tengah ke tepi hingga lapisan splash sepenuhnya
+  tersingkap. Teks dan bar keluar mengikuti pembukaan ini.
+- Setelah pembukaan splash selesai, dot hero muncul dengan arah gerak kebalikan:
+  pola bergerak dari tepi menuju tengah, lalu menetap pada grid hero seperti
+  keadaan biasanya. Gerakan “menutup” ini mengisi kembali pola dot dan tidak
+  menutup konten hero. Efek magnetik kursor aktif setelah dot hero menetap.
+- Acuan ritme awal: tekanan tengah sekitar 0,12 detik, pembukaan 0,45–0,55
+  detik, dan penutupan pola dot hero 0,35–0,45 detik. Setel lagi berdasarkan
+  preview agar transisi terasa menyambung dan tidak menahan konten terlalu lama.
+- Kemunculan navbar ala Dynamic Island dimulai saat transisi dot hero mendekati
+  akhir agar seluruh adegan terasa tersambung tanpa menambah waktu tunggu yang
+  panjang. Untuk `prefers-reduced-motion`, tampilkan hero dan navbar langsung.
 
 ### Keputusan yang sudah diambil
 
