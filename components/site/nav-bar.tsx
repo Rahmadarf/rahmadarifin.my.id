@@ -14,9 +14,11 @@ import { ThemeToggle } from "@/components/site/theme-toggle";
 // Section links resolve against the home page so they keep working from the
 // projects routes.
 // No "Home" entry: the monogram and name beside it already link to the home
-// page, and the old entry pointed at /#about, so its label did not describe
-// where it went.
+// page. The entry that used to carry that label pointed at /#about, so it is
+// named "About" now — the label matches the destination and no longer
+// duplicates the brand link.
 const LINKS = [
+  { label: "About", href: "/#about" },
   { label: "Projects", href: "/projects" },
   { label: "Skills", href: "/#skills" },
   { label: "Experience", href: "/#journey" },

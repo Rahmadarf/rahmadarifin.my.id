@@ -14,8 +14,11 @@ export function SiteFooter({
 
         {variant === "full" ? (
           <nav className="flex gap-5" aria-label="Navigasi footer">
+            {/* "Home" points at the home page, not at /#about as it used to.
+                Unlike the navbar the footer carries no brand link, so a real
+                Home entry earns its place here. */}
             {[
-              { label: "Home", href: "/#about" },
+              { label: "Home", href: "/" },
               { label: "Projects", href: "/projects" },
               { label: "Skills", href: "/#skills" },
               { label: "Contact", href: "/#contact" },
