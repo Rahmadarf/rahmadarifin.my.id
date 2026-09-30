@@ -89,6 +89,7 @@ export function NavBar() {
   const exit = reduceMotion ? { duration: 0 } : EXIT;
 
   const navRef = useRef<HTMLElement | null>(null);
+  const monogramRef = useRef<HTMLSpanElement | null>(null);
   const entranceStage = useEntranceStage();
   const [widthSettled, setWidthSettled] = useState(false);
   const onEntranceComplete = useCallback(() => setWidthSettled(true), []);
@@ -101,6 +102,7 @@ export function NavBar() {
 
   useNavEntrance({
     ref: navRef,
+    monogramRef,
     enabled: entranceStage === "ready",
     // prefers-reduced-motion lands on the finished state without animating.
     instant: reduceMotion === true,
@@ -154,6 +156,7 @@ export function NavBar() {
             {/* Not wrapped in the fade: the monogram is the circle the
                 entrance starts from, so it is visible from the first frame. */}
             <span
+              ref={monogramRef}
               aria-hidden
               className="flex size-8 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-accent font-mono text-[13px] font-semibold text-primary"
             >

@@ -3,10 +3,6 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { animate } from "motion/react";
 
-// The pill is 54px tall, so a 54px-wide pill is a circle — the shape the
-// monogram arrives in before the bar widens around it.
-export const NAV_CIRCLE_WIDTH = 54;
-
 const WIDTH_DELAY = 0.26;
 const WIDTH_DURATION = 0.32;
 const WIDTH_EASE = [0.22, 1, 0.36, 1] as const;
@@ -30,23 +26,37 @@ const useIsomorphicLayoutEffect =
  * value is applied, and the inline width is cleared afterwards so the
  * responsive classes govern again — including across a resize.
  */
+type Measurements = {
+  /** Natural width the pill settles at. */
+  width: number;
+  /** Diameter of the opening circle: the pill's own height, borders included. */
+  diameter: number;
+  /** Horizontal padding that centres the monogram inside that circle. */
+  startPadding: number;
+  paddingLeft: string;
+  paddingRight: string;
+};
+
 export function useNavEntrance({
   ref,
+  monogramRef,
   enabled,
   instant,
   onComplete,
 }: {
   ref: React.RefObject<HTMLElement | null>;
+  /** The circle is sized and centred around this element. */
+  monogramRef: React.RefObject<HTMLElement | null>;
   enabled: boolean;
   /** prefers-reduced-motion: finish immediately instead of animating. */
   instant: boolean;
   onComplete: () => void;
 }) {
-  // The target survives re-runs of the effect. React invokes effects twice in
+  // Measurements survive re-runs of the effect. React invokes effects twice in
   // development, and by the second run the element is already pinned to the
-  // circle width — measuring again would make the circle its own target and
-  // leave the navbar stuck as a dot.
-  const targetWidth = useRef<number | null>(null);
+  // circle — measuring again would make the circle its own target and leave
+  // the navbar stuck as a dot.
+  const measured = useRef<Measurements | null>(null);
 
   useIsomorphicLayoutEffect(() => {
     const element = ref.current;
@@ -62,20 +72,53 @@ export function useNavEntrance({
       return;
     }
 
-    if (targetWidth.current === null) {
+    if (measured.current === null) {
       // The element is still laid out by its classes here, and Motion's
       // `initial` has it at opacity 0, so nothing is visible yet.
-      targetWidth.current = element.getBoundingClientRect().width;
+      const rect = element.getBoundingClientRect();
+      const styles = getComputedStyle(element);
+
+      // The diameter is the pill's own height rather than a constant. Height
+      // is content plus padding plus the 1px borders, so hard-coding it got
+      // the borders wrong and opened on a 54x56 ellipse.
+      const diameter = rect.height;
+
+      // Centre the monogram in that circle. The pill's resting padding is
+      // deliberately lopsided — pl-3 against pr-2.5 — which left the monogram
+      // 4px right of centre while the pill was still a circle. Both sides
+      // start even and ease to their resting values as it widens.
+      const monogramWidth =
+        monogramRef.current?.getBoundingClientRect().width ?? 0;
+      const borders =
+        parseFloat(styles.borderLeftWidth) +
+        parseFloat(styles.borderRightWidth);
+
+      measured.current = {
+        width: rect.width,
+        diameter,
+        startPadding: Math.max(0, (diameter - borders - monogramWidth) / 2),
+        paddingLeft: styles.paddingLeft,
+        paddingRight: styles.paddingRight,
+      };
     }
 
+    const { width, diameter, startPadding, paddingLeft, paddingRight } =
+      measured.current;
+
     // Applied before paint, so the full-width bar is never shown.
-    element.style.width = `${NAV_CIRCLE_WIDTH}px`;
+    element.style.width = `${diameter}px`;
+    element.style.paddingLeft = `${startPadding}px`;
+    element.style.paddingRight = `${startPadding}px`;
 
     let cancelled = false;
     let frame = 0;
     const controls = animate(
       element,
-      { width: [`${NAV_CIRCLE_WIDTH}px`, `${targetWidth.current}px`] },
+      {
+        width: [`${diameter}px`, `${width}px`],
+        paddingLeft: [`${startPadding}px`, paddingLeft],
+        paddingRight: [`${startPadding}px`, paddingRight],
+      },
       {
         delay: WIDTH_DELAY,
         duration: WIDTH_DURATION,
@@ -98,7 +141,10 @@ export function useNavEntrance({
           // invisible — but it has to go, or the navbar keeps the pixel width
           // it was built at and stops responding to a resize.
           frame = requestAnimationFrame(() => {
-            if (!cancelled) element.style.width = "";
+            if (cancelled) return;
+            element.style.width = "";
+            element.style.paddingLeft = "";
+            element.style.paddingRight = "";
           });
         },
       },
@@ -109,5 +155,5 @@ export function useNavEntrance({
       cancelAnimationFrame(frame);
       controls.stop();
     };
-  }, [enabled, instant, onComplete, ref]);
+  }, [enabled, instant, monogramRef, onComplete, ref]);
 }
