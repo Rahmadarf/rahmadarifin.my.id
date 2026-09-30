@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/admin";
 import { MEDIA_BUCKET, isOwnedMediaPath } from "@/lib/media/paths";
+import { sweepOwnerMedia } from "@/lib/media/sweep";
 import {
   deleteSchema,
   fieldErrors,
@@ -47,14 +48,23 @@ function assertOwnedPath(
   return null;
 }
 
-async function removeMedia(
-  supabase: Awaited<ReturnType<typeof requireAdmin>>["supabase"],
-  paths: (string | null)[],
-) {
+type AdminClient = Awaited<ReturnType<typeof requireAdmin>>["supabase"];
+
+async function removeMedia(supabase: AdminClient, paths: (string | null)[]) {
   const targets = paths.filter((path): path is string => Boolean(path));
   if (!targets.length) return;
   // Best effort: a stale object is preferable to a failed content delete.
   await supabase.storage.from(MEDIA_BUCKET).remove(targets);
+}
+
+// Collects images that were uploaded from the browser but never landed on a
+// row. Runs after a successful write and never blocks its result.
+async function sweepQuietly(supabase: AdminClient, ownerId: string) {
+  try {
+    await sweepOwnerMedia(supabase, ownerId);
+  } catch {
+    // A failed cleanup is not a failed save.
+  }
 }
 
 // Projects --------------------------------------------------------------------
@@ -115,6 +125,7 @@ export async function saveProject(
         : null,
     ];
     await removeMedia(supabase, replaced);
+    await sweepQuietly(supabase, user.id);
 
     revalidatePath("/admin/projects");
     revalidatePublic(values.slug);
@@ -135,6 +146,8 @@ export async function saveProject(
         : `Gagal menyimpan proyek: ${error.message}`,
     );
   }
+
+  await sweepQuietly(supabase, user.id);
 
   revalidatePath("/admin/projects");
   revalidatePublic(values.slug);
@@ -171,6 +184,7 @@ export async function deleteProject(
     existing?.thumbnail_path ?? null,
     existing?.cover_path ?? null,
   ]);
+  await sweepQuietly(supabase, user.id);
 
   revalidatePath("/admin/projects");
   revalidatePublic(existing?.slug);
@@ -438,8 +452,35 @@ export async function saveProfile(
   if (previous?.photo_path && previous.photo_path !== parsed.data.photo_path) {
     await removeMedia(supabase, [previous.photo_path]);
   }
+  await sweepQuietly(supabase, user.id);
 
   revalidatePath("/admin/profile");
   revalidatePublic();
   return actionSuccess("Profil disimpan.");
+}
+
+// Manual escape hatch for the case the automatic sweep cannot reach: an upload
+// abandoned on a panel the owner never saves again.
+// Takes no arguments: useActionState supplies the previous state and the form
+// payload, and this action needs neither.
+export async function cleanupMedia(): Promise<ActionState> {
+  const { supabase, user } = await requireAdmin();
+
+  const { removed, skipped } = await sweepOwnerMedia(supabase, user.id);
+
+  revalidatePath("/admin/profile");
+
+  if (!removed) {
+    return actionSuccess(
+      skipped
+        ? `Tidak ada yang dihapus. ${skipped} file masih terlalu baru untuk dibersihkan.`
+        : "Tidak ada gambar tak terpakai.",
+    );
+  }
+
+  return actionSuccess(
+    `${removed} gambar tak terpakai dihapus${
+      skipped ? `, ${skipped} dilewati karena masih baru` : ""
+    }.`,
+  );
 }

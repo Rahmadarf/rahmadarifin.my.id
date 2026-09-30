@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { ImagePlus, Loader2, X } from "lucide-react";
@@ -14,10 +14,22 @@ import {
   type MediaKind,
 } from "@/lib/media/paths";
 
-// Uploads straight from the browser to Storage, then submits only the object
-// path with the form. Going through the browser client keeps the file out of
-// the Server Action request body, and Storage RLS still checks that the path
-// starts with this user's UUID.
+// Uploads go straight from the browser to Storage, then the form submits only
+// the object path. That keeps the file out of the Server Action request body,
+// and Storage RLS still checks that the path starts with this user's UUID.
+//
+// The cost of uploading before the form is saved is that a file can reach the
+// bucket without ever reaching a row. Three things keep that from piling up:
+//
+//   1. Replacing or removing an upload that was never saved deletes it here,
+//      immediately.
+//   2. Leaving the page with an unsaved change is confirmed first.
+//   3. Anything that still slips through is collected by the server-side sweep
+//      in lib/media/sweep.ts.
+//
+// `initialPath` is the path currently stored on the row. It updates after a
+// successful save, which is what makes rule 1 safe: an upload is only deleted
+// here while it differs from what the row holds.
 export function MediaUpload({
   name,
   ownerId,
@@ -37,6 +49,30 @@ export function MediaUpload({
   const [path, setPath] = useState(initialPath ?? "");
   const [previewUrl, setPreviewUrl] = useState(initialUrl);
   const [busy, setBusy] = useState(false);
+  // Paths this component uploaded, none of which are on the row yet.
+  const [uploadedHere, setUploadedHere] = useState<string[]>([]);
+
+  const unsaved = path !== (initialPath ?? "");
+
+  useEffect(() => {
+    if (!unsaved) return;
+
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [unsaved]);
+
+  // Only discards an upload that this component made and that the row does not
+  // reference. Media already stored on the row is left for the Server Action to
+  // remove after a successful save.
+  async function discardIfUnsaved(candidate: string) {
+    if (!candidate || candidate === initialPath) return;
+    if (!uploadedHere.includes(candidate)) return;
+
+    setUploadedHere((paths) => paths.filter((p) => p !== candidate));
+    const supabase = createClient();
+    await supabase.storage.from(MEDIA_BUCKET).remove([candidate]);
+  }
 
   async function handleFile(file: File) {
     if (!(MEDIA_MIME_TYPES as readonly string[]).includes(file.type)) {
@@ -70,13 +106,24 @@ export function MediaUpload({
         .from(MEDIA_BUCKET)
         .createSignedUrl(objectPath, 60 * 60);
 
+      const replaced = path;
+      setUploadedHere((paths) => [...paths, objectPath]);
       setPath(objectPath);
       setPreviewUrl(data?.signedUrl ?? null);
+      await discardIfUnsaved(replaced);
+
       toast.success("Gambar terunggah. Simpan form untuk memakainya.");
     } finally {
       setBusy(false);
       if (inputRef.current) inputRef.current.value = "";
     }
+  }
+
+  async function handleRemove() {
+    const removed = path;
+    setPath("");
+    setPreviewUrl(null);
+    await discardIfUnsaved(removed);
   }
 
   return (
@@ -121,6 +168,8 @@ export function MediaUpload({
               <span className="flex items-center gap-1.5">
                 <Loader2 className="size-3 animate-spin" /> Mengunggah…
               </span>
+            ) : unsaved ? (
+              "Belum tersimpan — simpan form untuk memakainya."
             ) : (
               describeMediaLimits()
             )}
@@ -130,10 +179,7 @@ export function MediaUpload({
         {path ? (
           <button
             type="button"
-            onClick={() => {
-              setPath("");
-              setPreviewUrl(null);
-            }}
+            onClick={() => void handleRemove()}
             className="flex items-center gap-1.5 rounded-md border border-input px-2.5 py-1.5 text-xs font-semibold text-text-secondary hover:border-destructive/40 hover:text-destructive"
           >
             <X className="size-3" />

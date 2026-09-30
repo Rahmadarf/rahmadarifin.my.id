@@ -45,7 +45,7 @@ Detail skema, policy RLS, dan izin Storage ada di [DATABASE.md](DATABASE.md).
 
 Yang masih perlu dikerjakan di proyek Supabase Anda:
 
-1. Jalankan ketiga migration di `supabase/migrations/`, lalu opsional `supabase/seed.sql` setelah mengganti `v_owner` dengan UUID akun Anda.
+1. Jalankan semua migration di `supabase/migrations/` berurutan, lalu opsional `supabase/seed.sql` setelah mengganti `v_owner` dengan UUID akun Anda. Kalau Anda sudah menjalankan tiga migration pertama, `20260929120300_revoke_anon_writes.sql` masih perlu dijalankan.
 2. Buat akun pemilik di Supabase Auth dan matikan pendaftaran publik.
 3. Pastikan UUID akun itu ada di `ADMIN_USER_IDS`.
 4. Masuk ke `/admin/login`, lalu uji CRUD dan upload gambar.
