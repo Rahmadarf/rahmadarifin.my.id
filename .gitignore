@@ -40,5 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Playwright MCP writes console logs and page snapshots here while debugging
+.playwright-mcp/
+
 # Safe template for project configuration
 !.env.example
