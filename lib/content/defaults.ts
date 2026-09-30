@@ -42,6 +42,11 @@ export const DEFAULT_PROFILE: Pick<
 
 export const MONOGRAM = "RAS";
 
+// Shown beside the monogram in the navbar. Deliberately shorter than
+// DEFAULT_PROFILE.full_name so the pill stays narrow enough for the inline
+// links to fit alongside it.
+export const BRAND_NAME = "Rahmad Arifin";
+
 export const PLACEHOLDER_CERTIFICATIONS =
   "[ To be filled in — formal certifications (bootcamp/course) or a list of core focus areas ]";
 
