@@ -1,19 +1,37 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "motion/react";
+import { animate } from "motion/react";
 import { EntranceProvider } from "@/components/site/entrance-context";
 import { SplashDots } from "@/components/site/splash-dots";
 import { SplashRoles } from "@/components/site/splash-roles";
 import { BRAND_NAME } from "@/lib/content/defaults";
 import {
+  NAVBAR_AFTER_CLOSE_MS,
   SPLASH_ATTRIBUTE,
   SPLASH_DURATION_MS,
+  SPLASH_OPEN_MS,
+  SPLASH_PRESS_MS,
   SPLASH_STORAGE_KEY,
 } from "@/lib/splash";
 
+// showing  the splash holds, bars bouncing and roles cycling
+// pressing the dots at the centre are pushed in, a beat before the gap opens
+// opening  a circular gap grows from the centre until the overlay is gone
+// closing  the overlay is already invisible; the hero's dots are filling in
+// done     settled
+type Phase = "showing" | "pressing" | "opening" | "closing" | "done";
+
 const BAR_DELAYS = [0, 0.15, 0.3, 0.45, 0.6];
+
+const STAGE_FOR_PHASE = {
+  showing: "waiting",
+  pressing: "waiting",
+  opening: "opening",
+  closing: "closing",
+  done: "ready",
+} as const;
 
 function markVisit() {
   try {
@@ -41,7 +59,7 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
   // here is derived from `phase`: the overlay's markup is fixed, visibility is
   // the CSS rule keyed on <html>, and `phase` only drives Motion's `animate`
   // (never server-rendered) and the entrance stage (context, not markup).
-  const [phase, setPhase] = useState<"showing" | "leaving" | "done">(() =>
+  const [phase, setPhase] = useState<Phase>(() =>
     typeof document !== "undefined" &&
     document.documentElement.getAttribute(SPLASH_ATTRIBUTE) === "show"
       ? "showing"
@@ -49,61 +67,83 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
   );
 
   const router = useRouter();
-  const live = phase !== "done";
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const live = phase !== "done" && phase !== "closing";
 
   useEffect(() => {
-    if (phase !== "showing") {
+    if (phase === "done") {
       // The single place the clock is reset, covering both cases: a visit
       // with no splash, and the moment a splash has finished. It has to be
       // every visit or the threshold would measure the gap between splashes
       // rather than the gap between visits — and it has to be after the
       // splash, so a tab closed midway still counts the next visit as fresh.
-      if (phase === "done") markVisit();
+      markVisit();
       return;
     }
 
-    // Warm the page most visitors go to next. Deliberately not awaited and
-    // given no failure path: a slow or failing prefetch must not hold the
-    // splash, and /projects has to work when opened directly regardless.
-    router.prefetch("/projects");
+    if (phase === "showing") {
+      // Warm the page most visitors go to next. Deliberately not awaited and
+      // given no failure path: a slow or failing prefetch must not hold the
+      // splash, and /projects has to work when opened directly regardless.
+      router.prefetch("/projects");
+    }
 
-    const timer = window.setTimeout(
-      () => setPhase("leaving"),
-      SPLASH_DURATION_MS,
-    );
+    const next: Record<Exclude<Phase, "done">, [Phase, number]> = {
+      showing: ["pressing", SPLASH_DURATION_MS],
+      pressing: ["opening", SPLASH_PRESS_MS],
+      opening: ["closing", SPLASH_OPEN_MS],
+      closing: ["done", NAVBAR_AFTER_CLOSE_MS],
+    };
+
+    const [to, delay] = next[phase];
+    const timer = window.setTimeout(() => {
+      // The overlay is fully eaten away by the time the gap finishes growing,
+      // so this is where it stops being painted at all — which also stops its
+      // dot canvas.
+      if (to === "closing") {
+        document.documentElement.removeAttribute(SPLASH_ATTRIBUTE);
+      }
+      setPhase(to);
+    }, delay);
+
     return () => window.clearTimeout(timer);
   }, [phase, router]);
 
-  const onFaded = useCallback(() => {
-    if (phase !== "leaving") return;
+  // The gap is animated imperatively because its end radius has to reach the
+  // far corner, which is only knowable at run time. Motion writes the custom
+  // property every frame; the mask in globals.css reads it.
+  useEffect(() => {
+    const overlay = overlayRef.current;
+    if (!overlay || phase !== "opening") return;
 
-    // Hiding is the attribute's job right to the end, so it comes off only
-    // now — removing it earlier would have cut the fade short.
-    document.documentElement.removeAttribute(SPLASH_ATTRIBUTE);
-    setPhase("done");
+    const corner = Math.hypot(window.innerWidth, window.innerHeight) / 2;
+    const controls = animate(
+      overlay,
+      { "--splash-hole": ["0px", `${Math.ceil(corner) + 40}px`] },
+      { duration: SPLASH_OPEN_MS / 1000, ease: [0.4, 0, 0.2, 1] },
+    );
+
+    return () => controls.stop();
   }, [phase]);
 
   return (
-    // "waiting" holds the navbar back until the splash has gone, so the two
-    // read as one movement instead of overlapping.
-    <EntranceProvider stage={live ? "waiting" : "ready"}>
+    // The stage is what ties the three pieces together: the gap opening, the
+    // hero's dots filling in behind it, and the navbar arriving last.
+    <EntranceProvider stage={STAGE_FOR_PHASE[phase]}>
       {children}
 
       {/* Always rendered, never unmounted. The server has to emit this markup
           for the pre-paint CSS rule to have something to match, and leaving it
           in place afterwards costs nothing: `display: none` stops the bars
           animating. */}
-      <motion.div
+      <div
+          ref={overlayRef}
           className="splash-overlay dot-grid fixed inset-0 z-[100] flex-col items-center justify-center gap-7 bg-background"
           aria-hidden
-          initial={{ opacity: 1 }}
-          animate={{ opacity: phase === "leaving" ? 0 : 1 }}
-          transition={{ duration: 0.32, ease: [0.4, 0, 1, 1] }}
-          onAnimationComplete={onFaded}
         >
-          {/* Kept animating through the fade-out so the wave does not freeze
-              on its last frame while the layer is still visible. */}
-          <SplashDots active={phase !== "done"} />
+          {/* Kept drawing through the press and the opening, so the wave is
+              still alive in whatever the growing gap has not eaten yet. */}
+          <SplashDots active={live} pressing={phase === "pressing" || phase === "opening"} />
 
           {/* `relative` puts these above the canvas, which is positioned and
               would otherwise paint over them. */}
@@ -118,12 +158,12 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="relative flex w-full flex-col items-center gap-2 text-center">
-            <SplashRoles active={phase !== "done"} />
+            <SplashRoles active={live} />
             <p className="text-sm text-text-tertiary">
               {BRAND_NAME} · Portfolio
             </p>
           </div>
-      </motion.div>
+      </div>
     </EntranceProvider>
   );
 }

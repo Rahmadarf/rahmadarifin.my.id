@@ -1,7 +1,6 @@
 import { NavBar } from "@/components/site/nav-bar";
 import { BackToTop } from "@/components/site/back-to-top";
 import { SplashScreen } from "@/components/site/splash-screen";
-import { splashDecisionScript } from "@/lib/splash";
 
 // Public shell: floating pill navbar plus the fixed back-to-top button that the
 // design puts on every page. The admin panel has its own shell, and no splash.
@@ -12,14 +11,6 @@ export default function SiteLayout({
 }) {
   return (
     <>
-      {/* Runs where it sits, before the rest of the body is parsed, so the
-          splash is either painted from the first frame or never seen at all.
-          Scoped to this layout rather than the root so the admin panel is
-          untouched. */}
-      <script
-        dangerouslySetInnerHTML={{ __html: splashDecisionScript() }}
-      />
-
       {/* The navbar's entrance is rendered into the server HTML in its hidden
           state, so without JavaScript it would never become visible and the
           site would lose its navigation. The splash has the same problem in

@@ -111,6 +111,27 @@ html[data-splash="show"] .splash-overlay {
   display: flex;
 }
 
+/* The exit: a circular gap grows from the centre and eats the overlay, rather
+   than the whole layer fading at once. The radius is driven from JS because it
+   has to reach the far corner, which depends on the viewport.
+
+   A mask rather than clip-path because clip-path keeps what is inside the
+   shape and this needs the opposite — the hole is what reveals the page. The
+   1px step gives the edge a hard rim instead of a blurred one. */
+.splash-overlay {
+  --splash-hole: 0px;
+  -webkit-mask-image: radial-gradient(
+    circle at 50% 50%,
+    transparent var(--splash-hole),
+    #000 calc(var(--splash-hole) + 1px)
+  );
+  mask-image: radial-gradient(
+    circle at 50% 50%,
+    transparent var(--splash-hole),
+    #000 calc(var(--splash-hole) + 1px)
+  );
+}
+
 @keyframes splash-equaliser {
   0%,
   100% {

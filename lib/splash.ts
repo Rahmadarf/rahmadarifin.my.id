@@ -15,6 +15,19 @@ export const SPLASH_ATTRIBUTE = "data-splash";
 // gate, so this delays nothing but itself.
 export const SPLASH_DURATION_MS = 1400;
 
+// The exit is one scene in four beats, with the roadmap's reference rhythm:
+// the dots at the centre are pressed in, a circular gap opens from there to
+// the edges, the hero's own dots then fill back in from the edges inward, and
+// the navbar arrives as that filling finishes.
+export const SPLASH_PRESS_MS = 120;
+export const SPLASH_OPEN_MS = 500;
+export const HERO_DOTS_CLOSE_MS = 400;
+
+// How far into the hero's fill-in the navbar starts. Short of
+// HERO_DOTS_CLOSE_MS on purpose: the roadmap asks for it to begin as that
+// transition nears its end, so the two overlap instead of queueing.
+export const NAVBAR_AFTER_CLOSE_MS = 300;
+
 /**
  * Runs before first paint, inline in the document.
  *
@@ -25,9 +38,14 @@ export const SPLASH_DURATION_MS = 1400;
  * Reduced motion opts out of the splash entirely rather than showing a still
  * version of it: without the animation the splash is just a delay, and the
  * navbar entrance behaves the same way.
+ *
+ * It lives in the root layout, which is the only place next/script honours
+ * `beforeInteractive`, so it guards the admin routes itself rather than
+ * relying on where it is mounted.
  */
 export function splashDecisionScript() {
   return `(function(){try{
+if(location.pathname.indexOf('/admin')===0)return;
 if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
 var v=localStorage.getItem('${SPLASH_STORAGE_KEY}');
 if(v&&Date.now()-Number(v)<${SPLASH_STALE_AFTER_MS})return;

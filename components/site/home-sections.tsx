@@ -21,7 +21,10 @@ export function HeroSection({
   return (
     // `isolate` keeps the z-10 content layer from escaping this section, and
     // `overflow-hidden` keeps the dot canvas inside it.
-    <section className="relative isolate flex w-full flex-col items-center overflow-hidden px-6 pb-24 pt-32 md:pb-36 md:pt-52">
+    // `dot-grid` stays on the section as the pre-hydration pattern: the dot
+    // canvas is empty until React mounts, and this is what the first frame
+    // shows. The canvas paints over it opaquely once it is live.
+    <section className="dot-grid relative isolate flex w-full flex-col items-center overflow-hidden px-6 pb-24 pt-32 md:pb-36 md:pt-52">
       <HeroDots />
 
       {/* Positioned above the dots so nothing here can be dragged by them. */}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { SPLASH_PRESS_MS as PRESS_MS } from "@/lib/splash";
 import {
   DOT_CELL,
   DOT_RADIUS,
@@ -30,6 +31,13 @@ const DRIFT = 2.6;
 const MIN_ALPHA = 0.45;
 const MAX_ALPHA = 1;
 
+// The press: a beat before the gap opens, dots near the centre are pulled
+// towards it, as if the middle of the field had been pushed in. It reaches
+// furthest at the centre and fades out by PRESS_REACH, so the field does not
+// visibly jerk at the edges.
+const PRESS_REACH = 420;
+const PRESS_DEPTH = 14;
+
 /**
  * The splash background: the hero's dot pattern, moving as a wave.
  *
@@ -39,8 +47,22 @@ const MAX_ALPHA = 1;
  * sees before React has hydrated, is covered rather than showing through
  * behind the moving dots.
  */
-export function SplashDots({ active }: { active: boolean }) {
+export function SplashDots({
+  active,
+  pressing,
+}: {
+  active: boolean;
+  /** The centre is being pushed in, ahead of the gap opening. */
+  pressing: boolean;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // Read inside the draw loop, so turning the press on does not restart the
+  // animation and reset the wave's clock. Mirrored in an effect rather than
+  // assigned during render, which React forbids.
+  const pressingRef = useRef(pressing);
+  useEffect(() => {
+    pressingRef.current = pressing;
+  }, [pressing]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -51,6 +73,7 @@ export function SplashDots({ active }: { active: boolean }) {
     let grid = sizeDotCanvas(canvas, context, host);
     let frame = 0;
     const started = performance.now();
+    let pressStarted = 0;
 
     const styles = getComputedStyle(canvas);
     // `color` carries --dot-grid-color and `backgroundColor` the page colour,
@@ -68,6 +91,15 @@ export function SplashDots({ active }: { active: boolean }) {
       }
 
       const seconds = (now - started) / 1000;
+
+      if (pressingRef.current && pressStarted === 0) pressStarted = now;
+      // Eases in and then stays down: the gap opens over the pressed field
+      // rather than letting it spring back first.
+      const press = pressStarted
+        ? Math.min(1, (now - pressStarted) / PRESS_MS) ** 0.6
+        : 0;
+      const centreX = grid.width / 2;
+      const centreY = grid.height / 2;
 
       context!.fillStyle = backdrop;
       context!.fillRect(0, 0, grid.width, grid.height);
@@ -89,8 +121,20 @@ export function SplashDots({ active }: { active: boolean }) {
 
           // Dots ride the wave along its dominant direction, so the motion
           // reads as one surface rather than each dot bobbing on its own.
-          const x = homeX + field * DRIFT * WAVES[0].dirX;
-          const y = homeY + field * DRIFT * WAVES[0].dirY;
+          let x = homeX + field * DRIFT * WAVES[0].dirX;
+          let y = homeY + field * DRIFT * WAVES[0].dirY;
+
+          if (press > 0) {
+            const toCentreX = centreX - homeX;
+            const toCentreY = centreY - homeY;
+            const distance = Math.hypot(toCentreX, toCentreY);
+            if (distance > 0.001 && distance < PRESS_REACH) {
+              const falloff = 1 - distance / PRESS_REACH;
+              const pull = PRESS_DEPTH * falloff * falloff * press;
+              x += (toCentreX / distance) * pull;
+              y += (toCentreY / distance) * pull;
+            }
+          }
 
           context!.globalAlpha =
             MIN_ALPHA + ((field + 1) / 2) * (MAX_ALPHA - MIN_ALPHA);

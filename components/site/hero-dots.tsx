@@ -2,6 +2,11 @@
 
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { DOT_CELL, DOT_RADIUS, TAU } from "@/lib/dot-grid";
+import { HERO_DOTS_CLOSE_MS } from "@/lib/splash";
+import {
+  useEntranceStage,
+  type EntranceStage,
+} from "@/components/site/entrance-context";
 
 // Canvas repaint of the `.dot-grid` background used by the Hero, with the dots
 // nearest the cursor drawn slightly pulled towards it.
@@ -11,6 +16,10 @@ import { DOT_CELL, DOT_RADIUS, TAU } from "@/lib/dot-grid";
 
 // How far the cursor reaches, how far a dot may travel, and how close a dot is
 // allowed to get. The gap is what keeps dots from piling onto the pointer.
+// The fill-in: how far out the dots start, and how long they take to land.
+const INTRO_REACH = 90;
+const INTRO_MS = HERO_DOTS_CLOSE_MS;
+
 const INFLUENCE = 130;
 const MAX_PULL = 7;
 const MIN_GAP = 16;
@@ -58,15 +67,34 @@ export function HeroDots() {
     isInteractiveOnServer,
   );
 
-  if (!interactive) {
-    return <div aria-hidden className="dot-grid absolute inset-0" />;
-  }
+  const stage = useEntranceStage();
 
-  return <MagneticDots />;
+  // Always the canvas, never a branch. Returning a <div> for one case and a
+  // <canvas> for another changes the element type between the server and the
+  // client, which React reports as a hydration mismatch and repairs by
+  // throwing the tree away. `interactive` and `stage` change what the canvas
+  // does, never what is rendered.
+  //
+  // It also means a touch visitor sees the dots fill in; they just never
+  // follow a cursor afterwards.
+  return <MagneticDots interactive={interactive} stage={stage} />;
 }
 
-function MagneticDots() {
+function MagneticDots({
+  interactive,
+  stage,
+}: {
+  interactive: boolean;
+  stage: EntranceStage;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // Read in the loop so a stage change never restarts the animation.
+  // Mirrored in an effect rather than assigned during render, which React
+  // forbids.
+  const stageRef = useRef(stage);
+  useEffect(() => {
+    stageRef.current = stage;
+  }, [stage]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -81,13 +109,28 @@ function MagneticDots() {
     // Current offset from home for every dot, x and y interleaved.
     let offsets = new Float32Array(0);
     let colour = getComputedStyle(canvas).color;
+    let backdrop = getComputedStyle(canvas).backgroundColor;
 
     const pointer = { x: 0, y: 0, active: false };
     let frame = 0;
     let running = false;
 
+    // The hero's dots fill back in from the edges towards the centre — the
+    // reverse of the gap that opened over the splash. `intro` runs 1 to 0; at
+    // 1 every dot sits pushed out along the line from the centre through it.
+    const wantsIntro = stageRef.current !== "ready";
+    let intro = wantsIntro ? 1 : 0;
+    let introStarted = 0;
+    // Until the dots have landed the pointer is ignored, so the magnetic
+    // effect cannot fight the arrival.
+    let settled = !wantsIntro;
+
     function draw() {
-      context!.clearRect(0, 0, width, height);
+      // Fill rather than clear: the section underneath keeps the CSS dot grid
+      // so the pattern is there before hydration, and a transparent canvas
+      // would let those static dots show through the moving ones.
+      context!.fillStyle = backdrop;
+      context!.fillRect(0, 0, width, height);
       context!.fillStyle = colour;
       context!.beginPath();
 
@@ -106,8 +149,27 @@ function MagneticDots() {
       context!.fill();
     }
 
-    function step() {
+    function step(now: number) {
       let moving = false;
+
+      if (intro > 0) {
+        if (stageRef.current === "waiting" || stageRef.current === "opening") {
+          // Held out at full reach until the gap has finished opening.
+          introStarted = 0;
+        } else {
+          if (introStarted === 0) introStarted = now;
+          const progress = Math.min(1, (now - introStarted) / INTRO_MS);
+          // Ease out: quick off the edge, gentle into place.
+          intro = 1 - (1 - (1 - progress) ** 3);
+          if (progress >= 1) {
+            intro = 0;
+            settled = true;
+          }
+        }
+      }
+
+      const centreX = width / 2;
+      const centreY = height / 2;
 
       for (let row = 0; row < rows; row += 1) {
         for (let column = 0; column < columns; column += 1) {
@@ -118,7 +180,15 @@ function MagneticDots() {
           let targetX = 0;
           let targetY = 0;
 
-          if (pointer.active) {
+          if (intro > 0) {
+            // Pushed outward along the ray from the centre, so the pattern
+            // reads as closing inward as `intro` falls to zero.
+            const outX = homeX - centreX;
+            const outY = homeY - centreY;
+            const spread = Math.hypot(outX, outY) || 1;
+            targetX = (outX / spread) * INTRO_REACH * intro;
+            targetY = (outY / spread) * INTRO_REACH * intro;
+          } else if (pointer.active && settled) {
             const dx = pointer.x - homeX;
             const dy = pointer.y - homeY;
             const distance = Math.sqrt(dx * dx + dy * dy);
@@ -152,6 +222,14 @@ function MagneticDots() {
       draw();
 
       if (moving) {
+        frame = requestAnimationFrame(step);
+        return;
+      }
+
+      // The fill-in has not been released yet, so keep the loop alive even
+      // though nothing is easing: the dots are parked out at full reach
+      // waiting for the gap to finish opening.
+      if (intro > 0) {
         frame = requestAnimationFrame(step);
         return;
       }
@@ -211,6 +289,9 @@ function MagneticDots() {
     }
 
     resize();
+    // Kicks the loop for the fill-in; without a pointer nothing else would
+    // start it.
+    if (intro > 0) run();
 
     const resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(host);
@@ -219,6 +300,7 @@ function MagneticDots() {
     // repaint so an idle grid picks up the new colour.
     const themeObserver = new MutationObserver(() => {
       colour = getComputedStyle(canvas).color;
+      backdrop = getComputedStyle(canvas).backgroundColor;
       draw();
     });
     themeObserver.observe(document.documentElement, {
@@ -226,8 +308,10 @@ function MagneticDots() {
       attributeFilter: ["class"],
     });
 
-    host.addEventListener("pointermove", handlePointerMove);
-    host.addEventListener("pointerleave", handlePointerLeave);
+    if (interactive) {
+      host.addEventListener("pointermove", handlePointerMove);
+      host.addEventListener("pointerleave", handlePointerLeave);
+    }
 
     return () => {
       cancelAnimationFrame(frame);
@@ -235,8 +319,9 @@ function MagneticDots() {
       themeObserver.disconnect();
       host.removeEventListener("pointermove", handlePointerMove);
       host.removeEventListener("pointerleave", handlePointerLeave);
+      /* removeEventListener on a listener that was never added is a no-op. */
     };
-  }, []);
+  }, [interactive]);
 
   return (
     <canvas
@@ -245,7 +330,7 @@ function MagneticDots() {
       // `color` carries the CSS custom property into the canvas, so the dots
       // follow the theme without the component knowing the palette.
       style={{ color: "var(--dot-grid-color)" }}
-      className="pointer-events-none absolute inset-0 h-full w-full"
+      className="pointer-events-none absolute inset-0 h-full w-full bg-background"
     />
   );
 }
