@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { EntranceProvider } from "@/components/site/entrance-context";
+import { SplashDots } from "@/components/site/splash-dots";
 import { BRAND_NAME, SPLASH_TAGLINE } from "@/lib/content/defaults";
 import {
   SPLASH_ATTRIBUTE,
@@ -99,7 +100,13 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
           transition={{ duration: 0.32, ease: [0.4, 0, 1, 1] }}
           onAnimationComplete={onFaded}
         >
-          <div className="flex h-12 items-end gap-2">
+          {/* Kept animating through the fade-out so the wave does not freeze
+              on its last frame while the layer is still visible. */}
+          <SplashDots active={phase !== "done"} />
+
+          {/* `relative` puts these above the canvas, which is positioned and
+              would otherwise paint over them. */}
+          <div className="relative flex h-12 items-end gap-2">
             {BAR_DELAYS.map((delay) => (
               <span
                 key={delay}
@@ -109,7 +116,7 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
             ))}
           </div>
 
-          <div className="flex flex-col items-center gap-2 text-center">
+          <div className="relative flex flex-col items-center gap-2 text-center">
             <p className="text-[21px] font-bold tracking-[-0.01em]">
               {SPLASH_TAGLINE}
             </p>

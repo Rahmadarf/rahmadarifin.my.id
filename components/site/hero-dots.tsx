@@ -1,16 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useSyncExternalStore } from "react";
+import { DOT_CELL, DOT_RADIUS, TAU } from "@/lib/dot-grid";
 
 // Canvas repaint of the `.dot-grid` background used by the Hero, with the dots
 // nearest the cursor drawn slightly pulled towards it.
 //
-// These constants have to match the CSS in globals.css exactly, or the grid
-// shifts the moment the canvas takes over: `radial-gradient(circle,
-// var(--dot-grid-color) 1.5px, transparent 1.5px)` at `background-size: 24px
-// 24px` puts a 1.5px dot in the middle of every 24px cell.
-const CELL = 24;
-const DOT_RADIUS = 1.5;
+// Grid geometry is shared with the splash background so the two patterns line
+// up; see lib/dot-grid.ts.
 
 // How far the cursor reaches, how far a dot may travel, and how close a dot is
 // allowed to get. The gap is what keeps dots from piling onto the pointer.
@@ -22,7 +19,6 @@ const MIN_GAP = 16;
 const EASE = 0.16;
 const SETTLED = 0.05;
 
-const TAU = Math.PI * 2;
 
 // A fine pointer that can hover: mouse or trackpad, not a touchscreen.
 const POINTER_QUERY = "(hover: hover) and (pointer: fine)";
@@ -98,8 +94,8 @@ function MagneticDots() {
       for (let row = 0; row < rows; row += 1) {
         for (let column = 0; column < columns; column += 1) {
           const index = (row * columns + column) * 2;
-          const x = CELL / 2 + column * CELL + offsets[index];
-          const y = CELL / 2 + row * CELL + offsets[index + 1];
+          const x = DOT_CELL / 2 + column * DOT_CELL + offsets[index];
+          const y = DOT_CELL / 2 + row * DOT_CELL + offsets[index + 1];
           // moveTo before arc, otherwise consecutive arcs are joined by a line.
           context!.moveTo(x + DOT_RADIUS, y);
           context!.arc(x, y, DOT_RADIUS, 0, TAU);
@@ -116,8 +112,8 @@ function MagneticDots() {
       for (let row = 0; row < rows; row += 1) {
         for (let column = 0; column < columns; column += 1) {
           const index = (row * columns + column) * 2;
-          const homeX = CELL / 2 + column * CELL;
-          const homeY = CELL / 2 + row * CELL;
+          const homeX = DOT_CELL / 2 + column * DOT_CELL;
+          const homeY = DOT_CELL / 2 + row * DOT_CELL;
 
           let targetX = 0;
           let targetY = 0;
@@ -194,8 +190,8 @@ function MagneticDots() {
       canvas!.height = Math.round(height * ratio);
       context!.setTransform(ratio, 0, 0, ratio, 0, 0);
 
-      columns = Math.ceil(width / CELL);
-      rows = Math.ceil(height / CELL);
+      columns = Math.ceil(width / DOT_CELL);
+      rows = Math.ceil(height / DOT_CELL);
       offsets = new Float32Array(columns * rows * 2);
 
       draw();
