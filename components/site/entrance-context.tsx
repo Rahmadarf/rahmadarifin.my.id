@@ -2,16 +2,17 @@
 
 import { createContext, useContext } from "react";
 
-// Coordinates the navbar's entrance with whatever runs before it.
+// Drives the opening scene, so the splash leaving, the hero's dots filling in
+// and the navbar arriving read as one movement rather than three.
 //
-// Today nothing does, so the provider always reports "ready" and the navbar
-// animates as soon as it mounts. The splash screen will own this later: it
-// holds the stage at "waiting" while it is on screen and flips it to "ready" as
-// it leaves, so the splash ending and the navbar arriving read as one movement.
+//   waiting   the splash is on screen, or is being pressed in
+//   opening   the circular gap is growing; the hero is coming into view
+//   closing   the hero's dots are filling back in from the edges
+//   ready     everything may settle: the navbar enters, the magnetic dots live
 //
-// The context exists now rather than later so adding the splash does not mean
-// reopening the navbar.
-export type EntranceStage = "waiting" | "ready";
+// Without a splash the stage is "ready" from the start, which is what makes a
+// return visit skip straight to the finished page.
+export type EntranceStage = "waiting" | "opening" | "closing" | "ready";
 
 const EntranceContext = createContext<EntranceStage>("ready");
 
