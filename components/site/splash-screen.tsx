@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { EntranceProvider } from "@/components/site/entrance-context";
 import { SplashDots } from "@/components/site/splash-dots";
-import { BRAND_NAME, SPLASH_TAGLINE } from "@/lib/content/defaults";
+import { SplashRoles } from "@/components/site/splash-roles";
+import { BRAND_NAME } from "@/lib/content/defaults";
 import {
   SPLASH_ATTRIBUTE,
   SPLASH_DURATION_MS,
@@ -116,10 +117,8 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
             ))}
           </div>
 
-          <div className="relative flex flex-col items-center gap-2 text-center">
-            <p className="text-[21px] font-bold tracking-[-0.01em]">
-              {SPLASH_TAGLINE}
-            </p>
+          <div className="relative flex w-full flex-col items-center gap-2 text-center">
+            <SplashRoles active={phase !== "done"} />
             <p className="text-sm text-text-tertiary">
               {BRAND_NAME} · Portfolio
             </p>
