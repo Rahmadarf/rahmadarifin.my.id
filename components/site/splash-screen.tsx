@@ -10,11 +10,13 @@ import { BRAND_NAME } from "@/lib/content/defaults";
 import {
   NAVBAR_AFTER_CLOSE_MS,
   SPLASH_ATTRIBUTE,
-  SPLASH_DURATION_MS,
+  SPLASH_MAX_MS,
+  SPLASH_MIN_MS,
   SPLASH_OPEN_MS,
   SPLASH_PRESS_MS,
   SPLASH_STORAGE_KEY,
 } from "@/lib/splash";
+import { whenPageReady } from "@/lib/page-ready";
 
 // showing  the splash holds, bars bouncing and roles cycling
 // pressing the dots at the centre are pushed in, a beat before the gap opens
@@ -83,13 +85,42 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
 
     if (phase === "showing") {
       // Warm the page most visitors go to next. Deliberately not awaited and
-      // given no failure path: a slow or failing prefetch must not hold the
-      // splash, and /projects has to work when opened directly regardless.
+      // kept out of the readiness condition below: the roadmap excludes route
+      // prefetches from it, a slow or failing one must not hold the splash,
+      // and /projects has to work when opened directly regardless.
       router.prefetch("/projects");
+
+      // The splash holds for the page behind it, not for a fixed stretch —
+      // but never shorter than the floor, and never past the ceiling.
+      let finished = false;
+      const startedAt = performance.now();
+      let floorTimer = 0;
+
+      const advance = () => {
+        if (finished) return;
+        finished = true;
+        setPhase("pressing");
+      };
+
+      const ceiling = window.setTimeout(advance, SPLASH_MAX_MS);
+
+      void whenPageReady().then(() => {
+        if (finished) return;
+        const remaining =
+          SPLASH_MIN_MS - (performance.now() - startedAt);
+        if (remaining <= 0) advance();
+        else floorTimer = window.setTimeout(advance, remaining);
+      });
+
+      return () => {
+        finished = true;
+        window.clearTimeout(ceiling);
+        window.clearTimeout(floorTimer);
+      };
     }
 
-    const next: Record<Exclude<Phase, "done">, [Phase, number]> = {
-      showing: ["pressing", SPLASH_DURATION_MS],
+    // The exit beats are animation, not waiting, so they keep fixed lengths.
+    const next: Record<"pressing" | "opening" | "closing", [Phase, number]> = {
       pressing: ["opening", SPLASH_PRESS_MS],
       opening: ["closing", SPLASH_OPEN_MS],
       closing: ["done", NAVBAR_AFTER_CLOSE_MS],

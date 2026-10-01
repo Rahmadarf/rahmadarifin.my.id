@@ -10,10 +10,19 @@ export const SPLASH_STALE_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
 
 export const SPLASH_ATTRIBUTE = "data-splash";
 
-// Long enough for one cycle of the equaliser, short enough that the content
-// underneath is not held back for long. The splash is an overlay, never a
-// gate, so this delays nothing but itself.
-export const SPLASH_DURATION_MS = 1400;
+// The splash holds until the page behind it is actually ready to be looked at
+// — fonts resolved and the images above the fold decoded — rather than for a
+// fixed stretch. Two bounds keep that honest:
+//
+// The floor is a judgement call, not a roadmap requirement. On a warm cache
+// the page is ready in well under 100ms, and a splash that appeared and left
+// again inside a blink would read as a glitch, especially with a one-second
+// exit scene behind it.
+//
+// The ceiling is the roadmap's: a stalled image or a dead network must not
+// hold the splash open with no end.
+export const SPLASH_MIN_MS = 700;
+export const SPLASH_MAX_MS = 2500;
 
 // The exit is one scene in four beats, with the roadmap's reference rhythm:
 // the dots at the centre are pressed in, a circular gap opens from there to
