@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { MediaFrame } from "@/components/site/media-frame";
 import { ProjectCard } from "@/components/site/project-card";
 import {
   Section,
@@ -8,9 +9,14 @@ import {
 } from "@/components/site/section";
 import { TechTag } from "@/components/site/tech-tag";
 import { SOCIAL_LABELS, socialHandle } from "@/lib/social";
+import { parseEducationEntry, splitLines } from "@/lib/profile-text";
 import {
+  ABOUT_PHOTO_CAPTION,
   HERO_PRIMARY_CTA,
   HERO_SECONDARY_CTA,
+  IDENTITY_ROLE,
+  PLACEHOLDER_CERTIFICATIONS,
+  PLACEHOLDER_EDUCATION,
   PROFILE_READOUT,
   PROFILE_READOUT_PATH,
   SECTION_TITLES,
@@ -36,10 +42,8 @@ function EmptyState({ children }: { children: React.ReactNode }) {
 /**
  * Left-aligned two-column hero.
  *
- * `id="about"` lives here: the design dropped the separate About block, so the
- * navbar's About entry resolves to the hero, which is where the introduction
- * now is. The top padding clears the fixed navbar — 69px of nav on mobile and
- * 74px on desktop, plus the design's own 56/112px.
+ * The top padding clears the fixed navbar — 69px of nav on mobile and 74px on
+ * desktop, plus the design's own 56/112px.
  */
 export function HeroSection({
   profile,
@@ -51,10 +55,7 @@ export function HeroSection({
   const iconLinks = socialLinks.filter((link) => link.platform !== "email");
 
   return (
-    <section
-      id="about"
-      className="w-full px-6 pb-10 pt-[125px] lg:px-30 lg:pb-18 lg:pt-[186px]"
-    >
+    <section className="w-full px-6 pb-10 pt-[125px] lg:px-30 lg:pb-18 lg:pt-[186px]">
       <div className="mx-auto flex w-full max-w-[640px] flex-col gap-7 lg:max-w-[1200px] lg:flex-row lg:items-end lg:gap-20">
         <div className="flex flex-col items-start gap-7 lg:w-[740px] lg:shrink-0">
           {profile.availability_badge ? (
@@ -136,6 +137,131 @@ function ProfileReadout() {
   );
 }
 
+/**
+ * About: the photo and identity lockup beside the bio and two info cards.
+ *
+ * Every value comes from the profile row, same as the block this replaces —
+ * `photo_path`, `full_name`, `alias`, `bio`, `certifications`, `education`.
+ * The two free-text columns are split into lists at render time; see
+ * lib/profile-text.ts.
+ */
+export function AboutSection({ profile }: { profile: PublicProfile }) {
+  const focusAreas = splitLines(profile.certifications);
+  const education = splitLines(profile.education).map(parseEducationEntry);
+
+  const identity = [
+    profile.alias ? `aka ${profile.alias}` : null,
+    IDENTITY_ROLE.toUpperCase(),
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  return (
+    <Section id="about">
+      <SectionHeader number="01" label="About" title={SECTION_TITLES.about} />
+
+      <div className="flex flex-col gap-7 lg:flex-row lg:items-start lg:gap-20">
+        <div className="flex flex-col lg:w-[360px] lg:shrink-0">
+          <MediaFrame
+            src={profile.photoUrl}
+            alt={profile.full_name}
+            className="h-[360px] w-full rounded-md border border-border lg:h-[440px]"
+            sizes="(max-width: 1023px) 100vw, 360px"
+            placeholderLabel={ABOUT_PHOTO_CAPTION}
+          />
+
+          <div className="flex flex-col gap-1 pt-4">
+            <p className="text-[20px] leading-[26px] tracking-[-0.02em]">
+              {profile.full_name}
+            </p>
+            <p className="font-mono text-xs leading-[18px] text-text-secondary">
+              {identity}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex min-w-0 flex-1 flex-col gap-7 lg:gap-10">
+          {profile.bio ? (
+            <p className="text-[18px] leading-7 tracking-[-0.01em] lg:max-w-[680px] lg:text-2xl lg:leading-9 lg:tracking-[-0.015em]">
+              {profile.bio}
+            </p>
+          ) : null}
+
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch lg:gap-6">
+            <InfoCard label="Focus areas">
+              {focusAreas.length ? (
+                <ol className="flex flex-col gap-3.5">
+                  {focusAreas.map((item, index) => (
+                    <li key={item} className="flex gap-3.5">
+                      <span
+                        aria-hidden
+                        className="shrink-0 font-mono text-xs leading-[22px] text-primary"
+                      >
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <span className="min-w-0 flex-1 text-[15px] leading-[22px]">
+                        {item}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <CardPlaceholder>{PLACEHOLDER_CERTIFICATIONS}</CardPlaceholder>
+              )}
+            </InfoCard>
+
+            <InfoCard label="Education">
+              {education.length ? (
+                <div className="flex flex-col gap-3.5">
+                  {education.map((entry) => (
+                    <div key={entry.title} className="flex flex-col gap-1">
+                      <p className="text-[15px] font-medium leading-[22px]">
+                        {entry.title}
+                      </p>
+                      {entry.meta ? (
+                        <p className="font-mono text-xs leading-[18px] text-text-secondary">
+                          {entry.meta}
+                        </p>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <CardPlaceholder>{PLACEHOLDER_EDUCATION}</CardPlaceholder>
+              )}
+            </InfoCard>
+          </div>
+        </div>
+      </div>
+    </Section>
+  );
+}
+
+function InfoCard({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-1 flex-col gap-3.5 rounded-md border border-border bg-surface px-6 py-[22px]">
+      <p className="font-mono text-[11px] uppercase leading-4 tracking-[0.08em] text-text-tertiary">
+        {label}
+      </p>
+      {children}
+    </div>
+  );
+}
+
+function CardPlaceholder({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="rounded-sm border border-dashed border-input p-3.5 text-sm leading-[22px] text-text-tertiary">
+      {children}
+    </p>
+  );
+}
+
 export function ProjectsSection({
   lead,
   grid,
@@ -152,7 +278,7 @@ export function ProjectsSection({
   return (
     <Section id="projects">
       <SectionHeader
-        number="01"
+        number="02"
         label="Projects"
         title={SECTION_TITLES.projects}
         action={
@@ -198,7 +324,7 @@ export function SkillsSection({ skills }: { skills: SkillRow[] }) {
 
   return (
     <Section id="skills">
-      <SectionHeader number="02" label="Skills" title={SECTION_TITLES.skills} />
+      <SectionHeader number="03" label="Skills" title={SECTION_TITLES.skills} />
 
       {groups.length ? (
         <div className="grid gap-7 lg:grid-cols-3 lg:gap-6">
@@ -238,7 +364,7 @@ export function JourneySection({ entries }: { entries: TimelineEntryRow[] }) {
   return (
     <Section id="journey">
       <SectionHeader
-        number="03"
+        number="04"
         label="Journey"
         title={SECTION_TITLES.journey}
       />
@@ -294,7 +420,7 @@ export function ContactSection({
     <Section id="contact" className="pb-10 pt-16 lg:pb-18 lg:pt-24">
       <div className="flex flex-col gap-5 rounded-md border border-border bg-surface px-6 py-7 lg:flex-row lg:items-end lg:gap-16 lg:p-12">
         <div className="flex flex-col gap-5 lg:flex-1">
-          <SectionLabel number="04">Contact</SectionLabel>
+          <SectionLabel number="05">Contact</SectionLabel>
 
           <h2 className="text-[32px] leading-[38px] tracking-[-0.03em] lg:text-[44px] lg:leading-[50px]">
             {profile.contact_heading}

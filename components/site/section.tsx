@@ -25,7 +25,12 @@ export function Section({
   return (
     <section
       id={id}
-      className={cn("w-full px-6 pb-6 pt-16 lg:px-30 lg:pb-10 lg:pt-24", className)}
+      className={cn(
+        // scroll-mt clears the fixed navbar when an anchor link lands here:
+        // 69px of nav on mobile and 74px on desktop, plus breathing room.
+        "w-full scroll-mt-[93px] px-6 pb-6 pt-16 lg:scroll-mt-[98px] lg:px-30 lg:pb-10 lg:pt-24",
+        className,
+      )}
     >
       <div
         className={cn(
