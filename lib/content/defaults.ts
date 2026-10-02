@@ -73,10 +73,24 @@ export const PLACEHOLDER_EDUCATION =
 
 /** Section headings on the home page. The CMS has no field for these. */
 export const SECTION_TITLES = {
+  about: "About me",
   projects: "Selected work",
   skills: "Tools I work with",
   journey: "Where I am, where I'm heading",
 } as const;
+
+/**
+ * The role on the About section's one-line identity lockup, rendered
+ * uppercase after the alias.
+ *
+ * Not `profile.role_title`: that column holds a full sentence ("Web Developer
+ * focused on building end-to-end products — …"), which the design's single
+ * mono line cannot carry. The sentence-length copy has its slot in `bio`.
+ */
+export const IDENTITY_ROLE = "Web developer";
+
+/** Caption on the About photo slot while no photo is uploaded. */
+export const ABOUT_PHOTO_CAPTION = "Professional photo · 4:5";
 
 /** The terminal-style card in the hero: its prompt and its key/value rows. */
 export const PROFILE_READOUT_PATH = "~/rahmad.profile";

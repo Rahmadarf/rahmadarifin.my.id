@@ -20,15 +20,19 @@ import { useNavEntrance } from "@/components/site/use-nav-entrance";
 // border, no shadow and no blur — the design has exactly one shadow on the
 // whole site and it belongs to the mobile sheet.
 //
-// No "Home" entry: the monogram already links to the home page. "Projects"
-// points at the /projects route rather than the home section, which is what
-// lets it render as the active link on /projects and /projects/[slug].
+// No "Home" entry: the monogram already links to the home page. Every entry is
+// a home-page anchor, Projects included — the dedicated /projects route is
+// reached from the section's own "All projects" link.
+//
+// `active` is the route the entry represents, kept separate from `href`: the
+// link goes to the home section, while /projects and /projects/[slug] are what
+// light it up.
 const LINKS = [
-  { label: "About", href: "/#about" },
-  { label: "Projects", href: "/projects" },
-  { label: "Skills", href: "/#skills" },
-  { label: "Journey", href: "/#journey" },
-  { label: "Contact", href: "/#contact" },
+  { label: "About", href: "/#about", active: null },
+  { label: "Projects", href: "/#projects", active: "/projects" },
+  { label: "Skills", href: "/#skills", active: null },
+  { label: "Journey", href: "/#journey", active: null },
+  { label: "Contact", href: "/#contact", active: null },
 ] as const;
 
 // The mobile pill is 53px tall: 35px controls plus 8px padding each side plus
@@ -80,8 +84,10 @@ export function NavBar() {
   const reduceMotion = useReducedMotion();
   const onProjects = pathname.startsWith("/projects");
 
-  const isActive = (href: string) =>
-    href === "/projects" ? onProjects : false;
+  // Driven by the route, never by the href: the Projects entry links to the
+  // home section but is the one that lights up on /projects.
+  const isActive = (route: string | null) =>
+    route === "/projects" ? onProjects : false;
 
   const enter = reduceMotion ? { duration: 0 } : ENTER;
   const exit = reduceMotion ? { duration: 0 } : EXIT;
@@ -177,10 +183,10 @@ export function NavBar() {
               <Link
                 key={link.label}
                 href={link.href}
-                aria-current={isActive(link.href) ? "page" : undefined}
+                aria-current={isActive(link.active) ? "page" : undefined}
                 className={cn(
                   "shrink-0 rounded-full px-3 py-[7px] text-sm leading-[18px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  isActive(link.href)
+                  isActive(link.active)
                     ? "font-medium text-primary"
                     : "text-text-secondary hover:text-foreground",
                 )}
@@ -276,11 +282,11 @@ export function NavBar() {
                       key={link.label}
                       href={link.href}
                       onClick={() => setOpen(false)}
-                      aria-current={isActive(link.href) ? "page" : undefined}
+                      aria-current={isActive(link.active) ? "page" : undefined}
                       className={cn(
                         // 48px rows, as the design draws them.
                         "flex h-12 items-center justify-between px-5 text-[15px] font-medium leading-5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
-                        isActive(link.href)
+                        isActive(link.active)
                           ? "bg-accent font-semibold text-primary"
                           : "text-text-secondary hover:bg-surface hover:text-foreground",
                       )}
@@ -290,12 +296,12 @@ export function NavBar() {
                         aria-hidden
                         className={cn(
                           "font-mono text-xs leading-4",
-                          isActive(link.href)
+                          isActive(link.active)
                             ? "text-primary"
                             : "text-text-tertiary",
                         )}
                       >
-                        {isActive(link.href) ? "●" : "→"}
+                        {isActive(link.active) ? "●" : "→"}
                       </span>
                     </Link>
                   ))}

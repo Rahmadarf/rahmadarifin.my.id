@@ -50,26 +50,31 @@
   --card-foreground: #0b0b0e;
   --popover: #f2f2f4;
   --popover-foreground: #0b0b0e;
-  --primary: oklch(0.55 0.19 257);
+  /* Figma's light accent is #0A6DDD. Measured on this theme it reaches only
+     4.4:1 on `surface` and 4.1:1 on `surface-alt`, under the 4.5:1 AA wants
+     for body text — and the accent carries real text here ("View project →",
+     the section numbers, the focus-area indices), not just decoration.
+     #0A63CA is the same hue one step darker and clears every pairing. The
+     dark theme's accent already passes and is untouched. */
+  --primary: #0a63ca;
   --primary-foreground: #ffffff;
   --secondary: #e8e8ec;
   --secondary-foreground: #0b0b0e;
   --muted: #f2f2f4;
   --muted-foreground: #52525b;
-  --accent: oklch(0.55 0.19 257 / 0.10);
-  --accent-foreground: oklch(0.55 0.19 257);
+  --accent: rgba(10, 99, 202, 0.10);
+  --accent-foreground: #0a63ca;
   --destructive: oklch(0.577 0.245 27.325);
   --border: rgba(0,0,0,0.09);
   --input: rgba(0,0,0,0.20);
-  --ring: oklch(0.55 0.19 257);
+  --ring: #0a63ca;
   --surface: #f2f2f4;
   --surface-alt: #e8e8ec;
   --text-secondary: #52525b;
-  /* Figma's value here is #71717A. Measured against the light theme it lands
-     at 4.3:1 on `surface` and 4.0:1 on `surface-alt`, under the 4.5:1 that AA
-     asks of body text — and this colour carries the mono meta lines, which sit
-     on both. Darkened by four steps to clear it everywhere (5.0 and 4.5). */
-  --text-tertiary: #67676f;
+  /* Same story: Figma's #71717A measures 4.3:1 on `surface` and 4.0:1 on
+     `surface-alt`, and this colour carries every mono meta line, which sit on
+     both. #686871 clears them. */
+  --text-tertiary: #686871;
 }
 
 .dark {

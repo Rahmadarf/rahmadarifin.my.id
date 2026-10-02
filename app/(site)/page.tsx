@@ -1,4 +1,5 @@
 import {
+  AboutSection,
   ContactSection,
   HeroSection,
   JourneySection,
@@ -38,6 +39,7 @@ export default async function HomePage() {
   return (
     <>
       <HeroSection profile={profile} socialLinks={socialLinks} />
+      <AboutSection profile={profile} />
       <ProjectsSection lead={lead ?? null} grid={grid} />
       <SkillsSection skills={skills} />
       <JourneySection entries={timeline} />
