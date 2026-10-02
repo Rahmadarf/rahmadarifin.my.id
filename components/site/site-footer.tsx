@@ -1,45 +1,39 @@
 import Link from "next/link";
+import { FOOTER_BUILT_WITH } from "@/lib/content/defaults";
 
+/**
+ * Three mono items: copyright, what the site is built with, and a link back to
+ * the top. One row on desktop, stacked and left-aligned on mobile. No top
+ * border — the design separates the footer with whitespace only.
+ *
+ * The copyright is derived from the profile name and the current year. The
+ * middle slot is `profile.footer_note`, which is the only CMS field the
+ * design's footer has room for; it falls back to the design's own text.
+ */
 export function SiteFooter({
   note,
-  variant = "full",
+  name,
 }: {
   note: string | null;
-  variant?: "full" | "compact";
+  name: string;
 }) {
-  return (
-    <footer className="w-full border-t border-border py-10">
-      <div className="mx-auto flex w-full max-w-[1080px] flex-col items-center gap-4 px-6 text-center sm:flex-row sm:justify-between sm:px-0 sm:text-left">
-        <span className="text-[13px] text-text-tertiary">{note}</span>
+  const year = new Date().getFullYear();
 
-        {variant === "full" ? (
-          <nav className="flex gap-5" aria-label="Navigasi footer">
-            {/* "Home" points at the home page, not at /#about as it used to.
-                Unlike the navbar the footer carries no brand link, so a real
-                Home entry earns its place here. */}
-            {[
-              { label: "Home", href: "/" },
-              { label: "Projects", href: "/projects" },
-              { label: "Skills", href: "/#skills" },
-              { label: "Contact", href: "/#contact" },
-            ].map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="text-[13px] text-text-secondary hover:text-foreground"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-        ) : (
-          <Link
-            href="/projects"
-            className="text-[13px] text-text-secondary hover:text-foreground"
-          >
-            ← All Projects
-          </Link>
-        )}
+  return (
+    <footer className="w-full px-6 pb-10 pt-4 lg:px-30 lg:pt-8">
+      <div className="mx-auto flex w-full max-w-[640px] flex-col gap-2.5 font-mono text-xs leading-4 lg:max-w-[1200px] lg:flex-row lg:items-center lg:justify-between lg:gap-6">
+        <span className="text-text-tertiary">
+          &copy; {year} {name}
+        </span>
+
+        <span className="text-text-tertiary">{note || FOOTER_BUILT_WITH}</span>
+
+        <Link
+          href="#page-top"
+          className="self-start text-text-secondary transition-colors hover:text-primary"
+        >
+          Back to top <span aria-hidden>&uarr;</span>
+        </Link>
       </div>
     </footer>
   );

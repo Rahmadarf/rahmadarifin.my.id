@@ -1,6 +1,9 @@
+// Stack chips and status chips from the design: a hairline border, 6px radius,
+// Fira Code 12/16, no fill. Deliberately not a pill — the design reserves full
+// rounding for the navbar, badges and toggles.
 export function TechTag({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded-md border border-border bg-surface-alt px-[9px] py-1 font-mono text-xs tracking-[0.02em] text-text-secondary">
+    <span className="rounded-sm border border-border px-2 py-1 font-mono text-xs leading-4 text-text-secondary">
       {children}
     </span>
   );

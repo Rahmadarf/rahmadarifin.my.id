@@ -1,14 +1,19 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-// Project thumbnails and covers. When no image is set the design's blue-to-grey
-// gradient block stands in, so the layout never collapses.
+// Project thumbnails and covers. With no image set the design's flat
+// `surface-alt` block stands in, captioned in mono, so the layout never
+// collapses and the slot reads as deliberate rather than broken.
+//
+// Radius and border are left to the caller: inside a card the media is flush
+// and the card clips it, while on the /projects rows and the detail cover it
+// carries its own 8px radius and hairline.
 export function MediaFrame({
   src,
   alt,
   className,
-  sizes = "(max-width: 768px) 100vw, 360px",
-  placeholderLabel,
+  sizes = "(max-width: 1023px) 100vw, 640px",
+  placeholderLabel = "Screenshot · 16:10",
   priority = false,
 }: {
   src: string | null;
@@ -19,12 +24,7 @@ export function MediaFrame({
   priority?: boolean;
 }) {
   return (
-    <div
-      className={cn(
-        "relative overflow-hidden rounded-[10px] border border-border bg-[linear-gradient(135deg,oklch(0.64_0.19_257/0.22),var(--surface-alt))]",
-        className,
-      )}
-    >
+    <div className={cn("relative overflow-hidden bg-surface-alt", className)}>
       {src ? (
         <Image
           src={src}
@@ -35,7 +35,7 @@ export function MediaFrame({
           className="object-cover"
         />
       ) : placeholderLabel ? (
-        <span className="absolute inset-0 flex items-center justify-center px-4 text-center text-[13px] text-text-tertiary">
+        <span className="absolute inset-0 flex items-center justify-center px-4 text-center font-mono text-xs leading-4 text-text-tertiary">
           {placeholderLabel}
         </span>
       ) : null}

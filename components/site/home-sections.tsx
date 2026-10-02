@@ -1,16 +1,46 @@
-import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Camera, GraduationCap, Mail, Star } from "lucide-react";
-import { HeroDots } from "@/components/site/hero-dots";
-import { SocialIcons } from "@/components/site/social-icons";
+import { Button } from "@/components/ui/button";
 import { ProjectCard } from "@/components/site/project-card";
 import {
-  PLACEHOLDER_CERTIFICATIONS,
-  PLACEHOLDER_EDUCATION,
+  Section,
+  SectionHeader,
+  SectionLabel,
+} from "@/components/site/section";
+import { TechTag } from "@/components/site/tech-tag";
+import { SOCIAL_LABELS, socialHandle } from "@/lib/social";
+import {
+  HERO_PRIMARY_CTA,
+  HERO_SECONDARY_CTA,
+  PROFILE_READOUT,
+  PROFILE_READOUT_PATH,
+  SECTION_TITLES,
+  SKILL_GROUPS,
 } from "@/lib/content/defaults";
 import type { PublicProfile, ProjectView } from "@/lib/data/portfolio";
-import type { SocialLinkRow, TimelineEntryRow } from "@/lib/types/database";
+import type {
+  SkillCategory,
+  SkillRow,
+  SocialLinkRow,
+  TimelineEntryRow,
+} from "@/lib/types/database";
 
+/** Shared look for "nothing published yet" placeholders. */
+function EmptyState({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="rounded-md border border-dashed border-input bg-surface p-5 text-sm leading-[22px] text-text-tertiary">
+      {children}
+    </p>
+  );
+}
+
+/**
+ * Left-aligned two-column hero.
+ *
+ * `id="about"` lives here: the design dropped the separate About block, so the
+ * navbar's About entry resolves to the hero, which is where the introduction
+ * now is. The top padding clears the fixed navbar — 69px of nav on mobile and
+ * 74px on desktop, plus the design's own 56/112px.
+ */
 export function HeroSection({
   profile,
   socialLinks,
@@ -18,262 +48,233 @@ export function HeroSection({
   profile: PublicProfile;
   socialLinks: SocialLinkRow[];
 }) {
-  return (
-    // `isolate` keeps the z-10 content layer from escaping this section, and
-    // `overflow-hidden` keeps the dot canvas inside it.
-    // `dot-grid` stays on the section as the pre-hydration pattern: the dot
-    // canvas is empty until React mounts, and this is what the first frame
-    // shows. The canvas paints over it opaquely once it is live.
-    <section className="dot-grid relative isolate flex w-full flex-col items-center overflow-hidden px-6 pb-24 pt-32 md:pb-36 md:pt-52">
-      <HeroDots />
+  const iconLinks = socialLinks.filter((link) => link.platform !== "email");
 
-      {/* Positioned above the dots so nothing here can be dragged by them. */}
-      <div className="relative z-10 flex max-w-[820px] flex-col items-center gap-7 text-center">
-        {profile.availability_badge ? (
-          <div className="flex items-center gap-2 rounded-full border border-primary/30 bg-accent px-4 py-2">
-            <span className="size-[7px] rounded-full bg-primary" />
-            <span className="font-mono text-xs tracking-[0.02em] text-primary">
-              {profile.availability_badge}
-            </span>
-          </div>
-        ) : null}
-
-        {/* 64px is the design's desktop size; it needs more steps than one
-            breakpoint to stay readable down at 320px. */}
-        <h1 className="text-3xl font-extrabold leading-[1.1] tracking-[-0.02em] sm:text-4xl md:text-5xl md:leading-[1.08] lg:text-[64px]">
-          {profile.hero_headline}
-        </h1>
-
-        {profile.hero_intro ? (
-          <p className="max-w-[680px] text-base leading-relaxed text-text-secondary md:text-[19px]">
-            {profile.hero_intro}
-          </p>
-        ) : null}
-
-        <div className="mt-2 flex flex-wrap justify-center gap-3.5">
-          <Link
-            href="#projects"
-            className="rounded-[10px] bg-primary px-6 py-3.5 text-[15px] font-semibold text-primary-foreground transition hover:brightness-110"
-          >
-            View Projects
-          </Link>
-          <Link
-            href="#contact"
-            className="rounded-[10px] border border-input px-6 py-3.5 text-[15px] font-semibold transition-colors hover:border-primary/30 hover:bg-accent"
-          >
-            Get in Touch
-          </Link>
-        </div>
-
-        <SocialIcons links={socialLinks} className="mt-3 flex gap-2.5" />
-      </div>
-    </section>
-  );
-}
-
-export function AboutSection({ profile }: { profile: PublicProfile }) {
   return (
     <section
       id="about"
-      className="mx-auto flex w-full max-w-[1080px] flex-col gap-12 px-6 pb-28 pt-14 md:px-0 md:pb-36"
+      className="w-full px-6 pb-10 pt-[125px] lg:px-30 lg:pb-18 lg:pt-[186px]"
     >
-      <div className="flex flex-col gap-2.5">
-        <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-[34px]">
-          About Me
-        </h2>
-        <p className="text-[15px] text-text-tertiary">
-          A quick summary, educational background, and focus areas.
-        </p>
-      </div>
+      <div className="mx-auto flex w-full max-w-[640px] flex-col gap-7 lg:max-w-[1200px] lg:flex-row lg:items-end lg:gap-20">
+        <div className="flex flex-col items-start gap-7 lg:w-[740px] lg:shrink-0">
+          {profile.availability_badge ? (
+            <p className="flex items-center gap-2 rounded-full bg-accent px-3 py-1.5 font-mono text-[11px] leading-4 text-primary lg:text-xs">
+              <span aria-hidden className="size-[7px] rounded-full bg-primary" />
+              {profile.availability_badge}
+            </p>
+          ) : null}
 
-      <div className="flex flex-col gap-8 lg:flex-row lg:items-stretch">
-        <div className="flex flex-col gap-5 rounded-2xl border border-border bg-surface p-8 md:p-10 lg:w-[420px] lg:shrink-0">
-          {profile.photoUrl ? (
-            <Image
-              src={profile.photoUrl}
-              alt={profile.full_name}
-              width={128}
-              height={128}
-              className="size-32 rounded-2xl border border-border object-cover"
-            />
-          ) : (
-            <div className="flex size-32 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-input bg-surface-alt text-text-tertiary">
-              <Camera className="size-[26px]" strokeWidth={1.6} />
-              <span className="text-[11px]">Professional Photo</span>
-            </div>
-          )}
+          <h1 className="text-[40px] leading-[44px] tracking-[-0.03em] lg:text-[64px] lg:leading-[68px]">
+            {profile.hero_headline}
+          </h1>
 
-          <div>
-            <h3 className="text-[22px] font-bold tracking-[-0.02em]">
-              {profile.full_name}
-            </h3>
-            {profile.alias ? (
-              <p className="text-sm text-text-tertiary">{profile.alias}</p>
-            ) : null}
+          {profile.hero_intro ? (
+            <p className="text-base leading-[26px] text-text-secondary lg:text-[18px] lg:leading-7">
+              {profile.hero_intro}
+            </p>
+          ) : null}
+
+          <div className="flex w-full flex-col gap-2.5 lg:w-auto lg:flex-row lg:gap-3">
+            <Button asChild className="w-full lg:w-auto">
+              <Link href="#projects">{HERO_PRIMARY_CTA}</Link>
+            </Button>
+            <Button variant="secondary" asChild className="w-full lg:w-auto">
+              <Link href="#contact">{HERO_SECONDARY_CTA}</Link>
+            </Button>
           </div>
 
-          {profile.role_title ? (
-            <p className="text-[15px] leading-relaxed text-text-secondary">
-              {profile.role_title}
-            </p>
-          ) : null}
-
-          {profile.bio ? (
-            <p className="text-sm leading-relaxed text-text-secondary">
-              {profile.bio}
-            </p>
+          {iconLinks.length ? (
+            <ul className="flex flex-wrap gap-x-[18px] gap-y-2 font-mono text-xs leading-[18px] lg:gap-x-5 lg:text-[13px]">
+              {iconLinks.map((link) => (
+                <li key={link.id}>
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-text-secondary transition-colors hover:text-primary"
+                  >
+                    {SOCIAL_LABELS[link.platform]} &#8599;
+                  </a>
+                </li>
+              ))}
+            </ul>
           ) : null}
         </div>
 
-        <div className="flex flex-1 flex-col gap-6">
-          <AboutCard
-            icon={<Star className="size-4 text-primary" strokeWidth={2} />}
-            title="Certifications / Focus Areas"
-            body={profile.certifications}
-            placeholder={PLACEHOLDER_CERTIFICATIONS}
-          />
-          <AboutCard
-            icon={
-              <GraduationCap className="size-4 text-primary" strokeWidth={2} />
-            }
-            title="Education"
-            body={profile.education}
-            placeholder={PLACEHOLDER_EDUCATION}
-          />
-        </div>
+        <ProfileReadout />
       </div>
     </section>
   );
 }
 
-function AboutCard({
-  icon,
-  title,
-  body,
-  placeholder,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  body: string | null;
-  placeholder: string;
-}) {
+/**
+ * The terminal-style card beside the hero copy.
+ *
+ * Every row is hardcoded in lib/content/defaults.ts: the design introduced
+ * this card and the database has no columns for it.
+ */
+function ProfileReadout() {
   return (
-    <div className="rounded-2xl border border-border bg-surface p-7">
-      <div className="mb-4 flex items-center gap-2.5">
-        {icon}
-        <span className="text-[13px] font-bold uppercase tracking-[0.04em] text-text-tertiary">
-          {title}
-        </span>
-      </div>
+    <div className="w-full overflow-hidden rounded-md border border-border bg-surface lg:flex-1">
+      <p className="px-4 py-3 font-mono text-xs leading-4 text-text-tertiary lg:px-5 lg:py-3.5">
+        {PROFILE_READOUT_PATH}
+      </p>
 
-      {body ? (
-        <p className="whitespace-pre-line text-sm leading-relaxed text-text-secondary">
-          {body}
-        </p>
-      ) : (
-        <div className="rounded-xl border border-dashed border-input p-5 text-sm text-text-tertiary">
-          {placeholder}
-        </div>
-      )}
+      <div aria-hidden className="h-px w-full bg-border" />
+
+      <dl className="flex flex-col gap-3 p-4 font-mono text-xs leading-[18px] lg:px-5 lg:py-[18px]">
+        {PROFILE_READOUT.map((row) => (
+          <div key={row.key} className="flex gap-3 lg:gap-4">
+            <dt className="w-16 shrink-0 text-text-tertiary lg:w-[72px]">
+              {row.key}
+            </dt>
+            <dd className="min-w-0 flex-1 lg:text-[13px]">{row.value}</dd>
+          </div>
+        ))}
+      </dl>
     </div>
   );
 }
 
-export function FeaturedProjectsSection({
-  projects,
+export function ProjectsSection({
+  lead,
+  grid,
 }: {
-  projects: ProjectView[];
+  lead: ProjectView | null;
+  grid: ProjectView[];
 }) {
-  return (
-    <section
-      id="projects"
-      className="mx-auto flex w-full max-w-[1080px] flex-col gap-10 px-6 pb-28 md:px-0 md:pb-36"
-    >
-      <div className="flex flex-col gap-2.5">
-        <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-[34px]">
-          Featured Projects
-        </h2>
-        <p className="text-[15px] text-text-tertiary">
-          Selected projects that show how I approach my work.
-        </p>
-      </div>
+  const allProjects = (
+    <>
+      All projects <span aria-hidden>&rarr;</span>
+    </>
+  );
 
-      {projects.length ? (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project) => (
+  return (
+    <Section id="projects">
+      <SectionHeader
+        number="01"
+        label="Projects"
+        title={SECTION_TITLES.projects}
+        action={
+          <Link
+            href="/projects"
+            className="text-sm font-medium leading-[18px] text-primary hover:underline"
+          >
+            {allProjects}
+          </Link>
+        }
+      />
+
+      {lead ? (
+        <ProjectCard project={lead} variant="featured" />
+      ) : (
+        <EmptyState>Belum ada proyek yang dipublikasikan.</EmptyState>
+      )}
+
+      {grid.length ? (
+        <div className="grid gap-7 md:grid-cols-2 md:gap-6">
+          {grid.map((project) => (
             <ProjectCard key={project.id} project={project} />
           ))}
         </div>
-      ) : (
-        <p className="rounded-2xl border border-dashed border-input bg-surface p-7 text-sm text-text-tertiary">
-          Belum ada proyek unggulan yang dipublikasikan.
-        </p>
-      )}
+      ) : null}
 
-      <Link
-        href="/projects"
-        className="flex items-center gap-2 self-center rounded-[10px] border border-input px-7 py-3.5 text-[15px] font-semibold transition-colors hover:border-primary/30 hover:bg-accent"
-      >
-        View All Projects
-        <ArrowRight className="size-3.5" strokeWidth={2.4} />
-      </Link>
-    </section>
+      {/* The header's action moves down here below `lg`, as a full-width
+          secondary button — the mobile frame has no link in the header. */}
+      <Button variant="secondary" asChild className="w-full lg:hidden">
+        <Link href="/projects">{allProjects}</Link>
+      </Button>
+    </Section>
   );
 }
 
-export function TimelineSection({
-  entries,
-}: {
-  entries: TimelineEntryRow[];
-}) {
+export function SkillsSection({ skills }: { skills: SkillRow[] }) {
+  const groups = SKILL_GROUPS.map((group) => ({
+    ...group,
+    skills: skills.filter((skill) =>
+      (group.categories as readonly SkillCategory[]).includes(skill.category),
+    ),
+  })).filter((group) => group.skills.length > 0);
+
   return (
-    <section
-      id="journey"
-      className="mx-auto flex w-full max-w-[1080px] flex-col gap-10 px-6 pb-28 md:px-0 md:pb-36"
-    >
-      <div className="flex flex-col gap-2.5">
-        <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-[34px]">
-          Activities &amp; Seminars
-        </h2>
-        <p className="text-[15px] text-text-tertiary">
-          Seminars, workshops, competitions, and organizational involvement.
-        </p>
-      </div>
+    <Section id="skills">
+      <SectionHeader number="02" label="Skills" title={SECTION_TITLES.skills} />
+
+      {groups.length ? (
+        <div className="grid gap-7 lg:grid-cols-3 lg:gap-6">
+          {groups.map((group) => (
+            <article
+              key={group.label}
+              className="flex flex-col gap-3 rounded-md border border-border bg-surface p-5 lg:gap-3.5 lg:p-6"
+            >
+              <h3 className="text-[18px] leading-6 tracking-[-0.02em] lg:text-[20px] lg:leading-[26px]">
+                {group.label}
+              </h3>
+              <p className="text-sm leading-[22px] text-text-secondary">
+                {group.blurb}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {group.skills.map((skill) => (
+                  <TechTag key={skill.id}>{skill.name}</TechTag>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <EmptyState>Belum ada skill yang dipublikasikan.</EmptyState>
+      )}
+    </Section>
+  );
+}
+
+/**
+ * The vertical timeline.
+ *
+ * No new columns: the date is `period_label`, the status chip is `role` and
+ * the sentence underneath is `note`.
+ */
+export function JourneySection({ entries }: { entries: TimelineEntryRow[] }) {
+  return (
+    <Section id="journey">
+      <SectionHeader
+        number="03"
+        label="Journey"
+        title={SECTION_TITLES.journey}
+      />
 
       {entries.length ? (
-        <ol className="flex flex-col border-l border-border pl-8">
-          {entries.map((entry, index) => (
+        <ol className="flex flex-col divide-y divide-border">
+          {entries.map((entry) => (
             <li
               key={entry.id}
-              className={
-                index === entries.length - 1 ? "relative" : "relative pb-9"
-              }
+              className="flex flex-col gap-2 py-[22px] lg:flex-row lg:gap-10 lg:py-7"
             >
-              <span
-                className={`absolute -left-[37px] top-1 size-[9px] rounded-full ${
-                  index === 0 ? "bg-primary" : "bg-input"
-                }`}
-              />
-              <span className="font-mono text-xs tracking-[0.02em] text-text-tertiary">
+              <p className="font-mono text-xs leading-[18px] text-text-secondary lg:w-40 lg:shrink-0 lg:text-[13px] lg:leading-5">
                 {entry.period_label}
-              </span>
-              <h3 className="my-1 text-[18px] font-bold tracking-[-0.02em]">
-                {entry.title}
-              </h3>
-              {entry.role || entry.note ? (
-                <p className="text-sm text-text-secondary">
-                  {[entry.role, entry.note].filter(Boolean).join(" — ")}
-                </p>
-              ) : null}
+              </p>
+
+              <div className="flex min-w-0 flex-1 flex-col gap-2">
+                <div className="flex flex-wrap items-center gap-2.5 lg:gap-3">
+                  <h3 className="text-[20px] leading-[26px] tracking-[-0.02em] lg:text-[22px] lg:leading-7">
+                    {entry.title}
+                  </h3>
+                  {entry.role ? <TechTag>{entry.role}</TechTag> : null}
+                </div>
+
+                {entry.note ? (
+                  <p className="text-[15px] leading-6 text-text-secondary">
+                    {entry.note}
+                  </p>
+                ) : null}
+              </div>
             </li>
           ))}
         </ol>
       ) : (
-        <p className="rounded-2xl border border-dashed border-input bg-surface p-7 text-sm text-text-tertiary">
-          Belum ada kegiatan yang dipublikasikan.
-        </p>
+        <EmptyState>Belum ada kegiatan yang dipublikasikan.</EmptyState>
       )}
-    </section>
+    </Section>
   );
 }
 
@@ -287,37 +288,61 @@ export function ContactSection({
   const emailLink = socialLinks.find((link) => link.platform === "email");
   const email =
     emailLink?.url.replace(/^mailto:/i, "") ?? profile.contact_email ?? null;
+  const rows = socialLinks.filter((link) => link.platform !== "email");
 
   return (
-    <section
-      id="contact"
-      className="mx-auto w-full max-w-[1080px] px-6 pb-28 md:px-0 md:pb-30"
-    >
-      <div className="dot-grid flex flex-col items-center gap-4.5 rounded-2xl border border-border bg-gradient-to-b from-surface to-surface-alt p-6 text-center sm:p-10 md:p-14">
-        <h2 className="text-[26px] font-bold tracking-[-0.02em] md:text-[32px]">
-          {profile.contact_heading}
-        </h2>
+    <Section id="contact" className="pb-10 pt-16 lg:pb-18 lg:pt-24">
+      <div className="flex flex-col gap-5 rounded-md border border-border bg-surface px-6 py-7 lg:flex-row lg:items-end lg:gap-16 lg:p-12">
+        <div className="flex flex-col gap-5 lg:flex-1">
+          <SectionLabel number="04">Contact</SectionLabel>
 
-        {profile.contact_body ? (
-          <p className="max-w-[520px] text-[15px] leading-relaxed text-text-secondary">
-            {profile.contact_body}
-          </p>
+          <h2 className="text-[32px] leading-[38px] tracking-[-0.03em] lg:text-[44px] lg:leading-[50px]">
+            {profile.contact_heading}
+          </h2>
+
+          {profile.contact_body ? (
+            <p className="text-base leading-[26px] text-text-secondary lg:text-[17px] lg:leading-[27px]">
+              {profile.contact_body}
+            </p>
+          ) : null}
+
+          {/* "Download CV" from the design is not rendered: there is no CV
+              URL anywhere in the data, and the brief says to hide it rather
+              than invent one. */}
+          {email ? (
+            <div className="flex flex-col gap-2.5 lg:flex-row lg:gap-3">
+              <Button asChild className="w-full lg:w-auto">
+                <a href={`mailto:${email}`}>Send an email</a>
+              </Button>
+            </div>
+          ) : null}
+        </div>
+
+        {rows.length ? (
+          <>
+            <div aria-hidden className="h-px w-full bg-border lg:hidden" />
+
+            <div className="flex flex-col divide-y divide-border lg:w-[380px] lg:shrink-0 lg:divide-y">
+              {rows.map((link) => (
+                <a
+                  key={link.id}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex min-h-11 flex-col justify-center gap-1 py-3 font-mono transition-colors hover:text-primary lg:min-h-0 lg:flex-row lg:gap-4 lg:py-3.5"
+                >
+                  <span className="text-[11px] leading-4 tracking-[0.06em] text-text-tertiary lg:w-[76px] lg:shrink-0 lg:text-xs lg:leading-[18px] lg:tracking-normal">
+                    {link.platform}
+                  </span>
+                  <span className="min-w-0 break-all text-xs leading-[18px] lg:flex-1">
+                    {socialHandle(link.url)}
+                  </span>
+                </a>
+              ))}
+            </div>
+          </>
         ) : null}
-
-        {/* A long address overflowed the card on a 375px screen, so the label
-            may wrap and starts a step smaller. */}
-        {email ? (
-          <a
-            href={`mailto:${email}`}
-            className="mt-2 flex max-w-full items-center justify-center gap-2 rounded-[10px] bg-primary px-5 py-3.5 text-[13px] font-semibold break-all text-primary-foreground transition hover:brightness-110 sm:px-7 sm:text-[15px]"
-          >
-            <Mail className="size-4 shrink-0" />
-            {email}
-          </a>
-        ) : null}
-
-        <SocialIcons links={socialLinks} className="mt-1.5 flex gap-2.5" />
       </div>
-    </section>
+    </Section>
   );
 }

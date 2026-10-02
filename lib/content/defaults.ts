@@ -63,3 +63,61 @@ export const PLACEHOLDER_CERTIFICATIONS =
 
 export const PLACEHOLDER_EDUCATION =
   "[ To be filled in — institution name · major/level · start–end year ]";
+
+// --- Copy with no column behind it ---------------------------------------
+//
+// Everything below is hardcoded on purpose. These are elements the redesign
+// introduced that have no field in the database, and inventing columns for
+// them was explicitly out of scope. If any of it should become editable, it
+// needs a migration plus an admin form first.
+
+/** Section headings on the home page. The CMS has no field for these. */
+export const SECTION_TITLES = {
+  projects: "Selected work",
+  skills: "Tools I work with",
+  journey: "Where I am, where I'm heading",
+} as const;
+
+/** The terminal-style card in the hero: its prompt and its key/value rows. */
+export const PROFILE_READOUT_PATH = "~/rahmad.profile";
+
+export const PROFILE_READOUT: { key: string; value: string }[] = [
+  { key: "role", value: "Web developer" },
+  { key: "stack", value: "Next.js · Laravel · Supabase" },
+  { key: "language", value: "TypeScript · Tailwind CSS" },
+  { key: "database", value: "PostgreSQL" },
+  { key: "timezone", value: "Asia/Jakarta · UTC+7" },
+];
+
+/**
+ * The three skill cards in the design, mapped onto the five `skill_category`
+ * values that already exist. Flutter sits under Frontend because that is
+ * where the design puts it; the third card is named "Design & tooling"
+ * rather than the design's "Design" because the only category behind it is
+ * `tools`, which also holds Git.
+ */
+export const SKILL_GROUPS = [
+  {
+    label: "Frontend",
+    blurb: "Interfaces with a clear hierarchy, built to be fast and accessible.",
+    categories: ["frontend", "mobile"],
+  },
+  {
+    label: "Backend & data",
+    blurb: "Full-stack apps with auth, CRUD and real data behind them.",
+    categories: ["backend", "database"],
+  },
+  {
+    label: "Design & tooling",
+    blurb: "Systems first: tokens, components, and consistent states.",
+    categories: ["tools"],
+  },
+] as const;
+
+/** Hero call-to-action labels. */
+export const HERO_PRIMARY_CTA = "View projects";
+export const HERO_SECONDARY_CTA = "Get in touch";
+
+/** Fallback for the footer's middle slot when `profile.footer_note` is empty. */
+export const FOOTER_BUILT_WITH =
+  "Built with Next.js · Supabase · Tailwind CSS";
