@@ -3,7 +3,7 @@
 // rounding for the navbar, badges and toggles.
 export function TechTag({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded-sm border border-border px-2 py-1 font-mono text-xs leading-4 text-text-secondary">
+    <span className="rounded-sm border border-border px-2 py-1 font-mono text-xs leading-4 text-text-secondary transition-colors hover:border-primary/40 hover:text-primary">
       {children}
     </span>
   );
