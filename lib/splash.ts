@@ -21,7 +21,7 @@ export const SPLASH_ATTRIBUTE = "data-splash";
 //
 // The ceiling is the roadmap's: a stalled image or a dead network must not
 // hold the splash open with no end.
-export const SPLASH_MIN_MS = 700;
+export const SPLASH_MIN_MS = 2500;
 export const SPLASH_MAX_MS = 2500;
 
 // The exit is one scene in four beats, with the roadmap's reference rhythm:

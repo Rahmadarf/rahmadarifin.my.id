@@ -26,7 +26,7 @@ import { useNavEntrance } from "@/components/site/use-nav-entrance";
 // duplicates the brand link.
 const LINKS = [
   { label: "About", href: "/#about" },
-  { label: "Projects", href: "/projects" },
+  { label: "Projects", href: "/#projects" },
   { label: "Skills", href: "/#skills" },
   { label: "Experience", href: "/#journey" },
   { label: "Contact", href: "/#contact" },
