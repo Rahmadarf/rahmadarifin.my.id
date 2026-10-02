@@ -10,32 +10,31 @@ import {
   useReducedMotion,
   type Variants,
 } from "motion/react";
-import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BRAND_NAME, MONOGRAM } from "@/lib/content/defaults";
 import { ThemeToggle } from "@/components/site/theme-toggle";
 import { useEntranceStage } from "@/components/site/entrance-context";
 import { useNavEntrance } from "@/components/site/use-nav-entrance";
 
-// Floating pill navbar from the design: fixed top-centre, blurred glass.
-// Section links resolve against the home page so they keep working from the
-// projects routes.
-// No "Home" entry: the monogram and name beside it already link to the home
-// page. The entry that used to carry that label pointed at /#about, so it is
-// named "About" now — the label matches the destination and no longer
-// duplicates the brand link.
+// Floating pill navbar: fixed top-centre, opaque `surface` fill, hairline
+// border, no shadow and no blur — the design has exactly one shadow on the
+// whole site and it belongs to the mobile sheet.
+//
+// No "Home" entry: the monogram already links to the home page. "Projects"
+// points at the /projects route rather than the home section, which is what
+// lets it render as the active link on /projects and /projects/[slug].
 const LINKS = [
   { label: "About", href: "/#about" },
   { label: "Projects", href: "/projects" },
   { label: "Skills", href: "/#skills" },
-  { label: "Experience", href: "/#journey" },
+  { label: "Journey", href: "/#journey" },
   { label: "Contact", href: "/#contact" },
 ] as const;
 
-// The pill is 54px tall: 34px controls plus 10px padding each side. Collapsing
-// the sheet to exactly that height parks it behind the pill, so opening reads
-// as the sheet unrolling out from under it and closing tucks it back.
-const COLLAPSED_HEIGHT = 54;
+// The mobile pill is 53px tall: 35px controls plus 8px padding each side plus
+// the 1px borders. Collapsing the sheet to exactly that height parks it behind
+// the pill, so opening reads as the sheet unrolling out from under it.
+const COLLAPSED_HEIGHT = 53;
 
 // Enter: ease-out, 280ms. Exit: ease-in and shorter, per the house rule that
 // exits run at roughly three quarters of the enter duration.
@@ -47,7 +46,7 @@ const EXIT = { duration: 0.2, ease: [0.4, 0, 1, 1] } as const;
 //
 //   0.00–0.28s  circle drops from above and fades in   (here)
 //   0.26–0.58s  width expands from the circle          (useNavEntrance)
-//   0.46–0.75s  name, links, and controls fade in      (ITEM_VARIANTS)
+//   0.46–0.75s  links and controls fade in             (ITEM_VARIANTS)
 //
 // Width lives in the hook because its target has to be measured; everything
 // else is declarative so Motion renders the hidden state into the server HTML
@@ -71,10 +70,9 @@ const ITEM_VARIANTS: Variants = {
   shown: { opacity: 1, transition: { duration: 0.22, ease: "easeOut" } },
 };
 
-// Five links plus the monogram and theme toggle stop fitting well below
-// ~1024px — on a 375px phone the last link and the toggle were pushed off the
-// pill entirely. Below `lg`, including iPad portrait at 768px, they move into
-// this sheet instead.
+// Five links plus the monogram and the toggle stop fitting well below
+// ~1024px, so below `lg` — including iPad portrait at 768px — they move into
+// the sheet instead.
 export function NavBar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -87,6 +85,14 @@ export function NavBar() {
 
   const enter = reduceMotion ? { duration: 0 } : ENTER;
   const exit = reduceMotion ? { duration: 0 } : EXIT;
+
+  // AnimatePresence owns the sheet's unmount, so Radix's own close-time focus
+  // restore never runs — closing with Escape dropped focus on <body>. Put it
+  // back on the trigger here instead.
+  const onOpenChange = useCallback((next: boolean) => {
+    setOpen(next);
+    if (!next) triggerRef.current?.focus();
+  }, []);
 
   const navRef = useRef<HTMLElement | null>(null);
   const monogramRef = useRef<HTMLSpanElement | null>(null);
@@ -123,11 +129,11 @@ export function NavBar() {
   }, [open]);
 
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen} modal={false}>
+    <Dialog.Root open={open} onOpenChange={onOpenChange} modal={false}>
       {/* Positioning is split off the pill so Motion owns the pill's transform
           outright. Sharing it with `-translate-x-1/2` would mean the entrance's
           `y` wiped out the centring. */}
-      <div className="fixed left-1/2 top-4 z-50 -translate-x-1/2 sm:top-6">
+      <div className="fixed left-1/2 top-4 z-50 -translate-x-1/2 lg:top-6">
         <motion.nav
           ref={navRef}
           data-nav-shell
@@ -140,39 +146,32 @@ export function NavBar() {
           variants={SHELL_VARIANTS}
           transition={reduceMotion ? { duration: 0 } : undefined}
           className={cn(
-            "flex w-[calc(100vw-1.5rem)] max-w-md items-center justify-between gap-3 rounded-full border border-border bg-background/75 py-2.5 pl-3 pr-2.5 shadow-[0_4px_24px_rgba(0,0,0,0.10)] backdrop-blur-xl lg:w-auto lg:max-w-none lg:justify-start lg:gap-7 lg:pl-5",
+            "flex w-[calc(100vw-2rem)] max-w-md items-center justify-between gap-1 rounded-full border border-border bg-surface py-2 pl-[18px] pr-2 lg:w-auto lg:max-w-none lg:justify-start lg:pl-2.5",
             // Clipped only while the pill is narrower than its contents.
             // Leaving it on would crop the focus rings of the links inside.
             !entered && "overflow-hidden",
           )}
         >
-          {/* Monogram plus name. The monogram is decorative once the name is
-              visible, so it is hidden from assistive tech and the link is named
-              by its text. */}
+          {/* The monogram is the circle the entrance opens from, so it is
+              visible from the first frame and is not wrapped in the fade.
+              Its visible text is an abbreviation, so the link carries the
+              full name for assistive tech. */}
           <Link
             href="/"
-            className="flex min-w-0 shrink items-center gap-2.5 lg:shrink-0"
+            aria-label={`${MONOGRAM} — ${BRAND_NAME}, halaman utama`}
+            className="shrink-0 rounded-full pr-3.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:pl-2.5"
           >
-            {/* Not wrapped in the fade: the monogram is the circle the
-                entrance starts from, so it is visible from the first frame. */}
             <span
               ref={monogramRef}
-              aria-hidden
-              className="flex size-8 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-accent font-mono text-[13px] font-semibold text-primary"
+              className="block font-mono text-[13px] font-medium leading-[18px] tracking-[0.06em]"
             >
               {MONOGRAM}
             </span>
-            <motion.span
-              variants={ITEM_VARIANTS}
-              className="truncate text-sm font-semibold tracking-tight"
-            >
-              {BRAND_NAME}
-            </motion.span>
           </Link>
 
           <motion.div
             variants={ITEM_VARIANTS}
-            className="hidden items-center gap-7 lg:flex"
+            className="hidden items-center gap-1 lg:flex"
           >
             {LINKS.map((link) => (
               <Link
@@ -180,9 +179,9 @@ export function NavBar() {
                 href={link.href}
                 aria-current={isActive(link.href) ? "page" : undefined}
                 className={cn(
-                  "shrink-0 text-sm font-medium transition-colors",
+                  "shrink-0 rounded-full px-3 py-[7px] text-sm leading-[18px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   isActive(link.href)
-                    ? "font-semibold text-primary"
+                    ? "font-medium text-primary"
                     : "text-text-secondary hover:text-foreground",
                 )}
               >
@@ -193,7 +192,7 @@ export function NavBar() {
 
           <motion.div
             variants={ITEM_VARIANTS}
-            className="flex shrink-0 items-center gap-2"
+            className="flex shrink-0 items-center gap-1.5 lg:ml-1 lg:gap-0"
           >
             <ThemeToggle />
 
@@ -204,9 +203,22 @@ export function NavBar() {
               aria-expanded={open}
               aria-controls="site-nav-menu"
               onClick={() => setOpen((value) => !value)}
-              className="flex size-[34px] items-center justify-center rounded-full border border-input bg-surface-alt text-foreground transition-colors hover:border-primary/40 hover:text-primary lg:hidden"
+              className="relative flex h-[35px] shrink-0 flex-col items-center justify-center gap-1 rounded-full bg-surface-alt px-[11px] text-sm leading-4 text-foreground transition-colors after:absolute after:left-1/2 after:top-1/2 after:size-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-[''] hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
             >
-              {open ? <X className="size-4" /> : <Menu className="size-4" />}
+              {open ? (
+                <span aria-hidden>&#10005;</span>
+              ) : (
+                <>
+                  <span
+                    aria-hidden
+                    className="h-[1.5px] w-3.5 rounded-full bg-current"
+                  />
+                  <span
+                    aria-hidden
+                    className="h-[1.5px] w-3.5 rounded-full bg-current"
+                  />
+                </>
+              )}
             </button>
           </motion.div>
         </motion.nav>
@@ -225,7 +237,7 @@ export function NavBar() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, transition: exit }}
               transition={enter}
-              className="fixed inset-0 z-30 bg-black/40 backdrop-blur-[2px] lg:hidden"
+              className="fixed inset-0 z-30 bg-black/40 lg:hidden"
             />
 
             <Dialog.Content
@@ -249,14 +261,16 @@ export function NavBar() {
                 animate={{ height: "auto" }}
                 exit={{ height: COLLAPSED_HEIGHT, transition: exit }}
                 transition={enter}
-                className="fixed left-1/2 top-4 z-40 w-[calc(100vw-1.5rem)] max-w-md -translate-x-1/2 overflow-hidden rounded-[28px] border border-border bg-background shadow-[0_16px_44px_rgba(0,0,0,0.22)] sm:top-6 lg:hidden"
+                className="fixed left-1/2 top-4 z-40 w-[calc(100vw-1.5rem)] max-w-md -translate-x-1/2 overflow-hidden rounded-[28px] border border-border bg-background shadow-[0_16px_44px_rgba(0,0,0,0.22)] lg:hidden"
               >
                 <Dialog.Title className="sr-only">Navigasi</Dialog.Title>
 
-                {/* Sits behind the pill; nothing is drawn here. */}
+                {/* The pill row in the design. Nothing is drawn here: the real
+                    pill sits above this spacer and already carries the
+                    monogram, the toggle and the close button. */}
                 <div aria-hidden style={{ height: COLLAPSED_HEIGHT }} />
 
-                <div className="flex flex-col divide-y divide-border border-t border-border pb-2 pt-2">
+                <div className="flex flex-col divide-y divide-border border-t border-border py-2">
                   {LINKS.map((link) => (
                     <Link
                       key={link.label}
@@ -264,14 +278,25 @@ export function NavBar() {
                       onClick={() => setOpen(false)}
                       aria-current={isActive(link.href) ? "page" : undefined}
                       className={cn(
-                        // 48px rows keep every item a comfortable tap target.
-                        "flex min-h-12 items-center px-5 text-[15px] font-medium transition-colors",
+                        // 48px rows, as the design draws them.
+                        "flex h-12 items-center justify-between px-5 text-[15px] font-medium leading-5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
                         isActive(link.href)
                           ? "bg-accent font-semibold text-primary"
                           : "text-text-secondary hover:bg-surface hover:text-foreground",
                       )}
                     >
                       {link.label}
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "font-mono text-xs leading-4",
+                          isActive(link.href)
+                            ? "text-primary"
+                            : "text-text-tertiary",
+                        )}
+                      >
+                        {isActive(link.href) ? "●" : "→"}
+                      </span>
                     </Link>
                   ))}
                 </div>

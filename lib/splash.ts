@@ -21,20 +21,18 @@ export const SPLASH_ATTRIBUTE = "data-splash";
 //
 // The ceiling is the roadmap's: a stalled image or a dead network must not
 // hold the splash open with no end.
-export const SPLASH_MIN_MS = 700;
+export const SPLASH_MIN_MS = 2500;
 export const SPLASH_MAX_MS = 2500;
 
-// The exit is one scene in four beats, with the roadmap's reference rhythm:
-// the dots at the centre are pressed in, a circular gap opens from there to
-// the edges, the hero's own dots then fill back in from the edges inward, and
-// the navbar arrives as that filling finishes.
+// The exit is one scene: the dots at the centre are pressed in, then a
+// circular gap opens from there to the edges and eats the overlay.
+//
+// The redesign dropped the hero's dot grid, so the beat where those dots
+// filled back in from the edges is gone with it. The pause it occupied is
+// kept — the navbar still arrives a beat after the gap finishes rather than
+// on the same frame, which is what made the exit read as one movement.
 export const SPLASH_PRESS_MS = 120;
 export const SPLASH_OPEN_MS = 500;
-export const HERO_DOTS_CLOSE_MS = 400;
-
-// How far into the hero's fill-in the navbar starts. Short of
-// HERO_DOTS_CLOSE_MS on purpose: the roadmap asks for it to begin as that
-// transition nears its end, so the two overlap instead of queueing.
 export const NAVBAR_AFTER_CLOSE_MS = 300;
 
 /**

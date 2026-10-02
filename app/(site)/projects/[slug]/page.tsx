@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink } from "lucide-react";
 import { MediaFrame } from "@/components/site/media-frame";
-import { TechTagList } from "@/components/site/tech-tag";
+import { ExternalLink } from "@/components/site/project-card";
+import { SectionLabel } from "@/components/site/section";
 import { SiteFooter } from "@/components/site/site-footer";
+import { TechTagList } from "@/components/site/tech-tag";
 import {
   getPublicProfile,
   getPublishedProject,
@@ -45,115 +46,134 @@ export default async function ProjectDetailPage(
 
   if (!project) notFound();
 
-  const links = [
-    project.repo_url ? { label: "Repository", url: project.repo_url } : null,
-    project.live_url ? { label: "Live site", url: project.live_url } : null,
-  ].filter((link): link is { label: string; url: string } => Boolean(link));
+  const hasLinks = Boolean(project.repo_url || project.live_url);
 
   return (
     <>
-      <section className="mx-auto flex w-full max-w-[900px] flex-col gap-4.5 px-6 pt-32 md:px-0 md:pt-44">
-        <Link
-          href="/projects"
-          className="flex items-center gap-1.5 text-sm font-semibold text-text-secondary hover:text-foreground"
-        >
-          <ArrowLeft className="size-3.5" strokeWidth={2.4} />
-          Back to Projects
-        </Link>
+      <section className="w-full px-6 pt-[125px] lg:px-30 lg:pt-[162px]">
+        <div className="mx-auto flex w-full max-w-[640px] flex-col gap-5 lg:max-w-[1200px]">
+          <Link
+            href="/projects"
+            className="text-sm font-medium leading-[18px] text-text-secondary transition-colors hover:text-foreground"
+          >
+            <span aria-hidden>&larr;</span> Back to projects
+          </Link>
 
-        <h1 className="text-4xl font-extrabold tracking-[-0.02em] md:text-[42px]">
-          {project.title}
-        </h1>
+          <SectionLabel number="01">Project</SectionLabel>
 
-        <TechTagList tags={project.tech_tags} />
+          <h1 className="text-[40px] leading-[44px] tracking-[-0.03em] lg:text-[56px] lg:leading-[60px]">
+            {project.title}
+          </h1>
 
-        {project.description ? (
-          <p className="mt-2 max-w-[760px] text-base leading-relaxed text-text-secondary md:text-[17px]">
-            {project.description}
-          </p>
-        ) : null}
-      </section>
+          <TechTagList tags={project.tech_tags} />
 
-      <section className="mx-auto w-full max-w-[900px] px-6 pt-10 md:px-0">
-        <MediaFrame
-          src={project.coverUrl ?? project.thumbnailUrl}
-          alt={`Pratinjau ${project.title}`}
-          className="h-[220px] w-full rounded-2xl sm:h-[300px] md:h-[340px]"
-          sizes="(max-width: 900px) 100vw, 900px"
-          placeholderLabel="[ Screenshot / preview placeholder ]"
-          priority
-        />
-      </section>
-
-      <section className="mx-auto flex w-full max-w-[900px] flex-col gap-12 px-6 pt-14 md:flex-row md:px-0">
-        <div className="flex flex-1 flex-col gap-5">
-          <h2 className="text-[22px] font-bold tracking-[-0.02em]">
-            {project.detail_heading ?? "Key Features"}
-          </h2>
-
-          {project.features.length ? (
-            <ul className="flex flex-col gap-3.5">
-              {project.features.map((feature) => (
-                <li
-                  key={feature}
-                  className="flex items-start gap-3 text-[15px] leading-relaxed text-text-secondary"
-                >
-                  <span className="mt-0.5 text-primary">&bull;</span>
-                  {feature}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-[15px] text-text-tertiary">
-              Detail proyek belum ditambahkan.
+          {project.description ? (
+            <p className="max-w-[760px] text-base leading-[26px] text-text-secondary lg:text-[18px] lg:leading-[30px]">
+              {project.description}
             </p>
-          )}
-        </div>
-
-        <aside className="flex flex-col gap-5 md:w-[280px] md:shrink-0">
-          {project.note_label || project.note_body ? (
-            <div className="rounded-2xl border border-border bg-surface p-6">
-              <span className="text-xs font-bold uppercase tracking-[0.04em] text-text-tertiary">
-                {project.note_label ?? "Notes"}
-              </span>
-              <p className="mt-2.5 text-sm leading-relaxed text-text-secondary">
-                {project.note_body}
-              </p>
-            </div>
           ) : null}
+        </div>
+      </section>
 
-          <div className="rounded-2xl border border-border bg-surface p-6">
-            <span className="text-xs font-bold uppercase tracking-[0.04em] text-text-tertiary">
-              Links
-            </span>
-            {links.length ? (
-              <ul className="mt-2.5 flex flex-col gap-2">
-                {links.map((link) => (
-                  <li key={link.url}>
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+      <section className="w-full px-6 pt-7 lg:px-30 lg:pt-12">
+        <div className="mx-auto w-full max-w-[640px] lg:max-w-[1200px]">
+          <MediaFrame
+            src={project.coverUrl ?? project.thumbnailUrl}
+            alt={`Pratinjau ${project.title}`}
+            className="h-[220px] w-full rounded-md border border-border lg:h-[480px]"
+            sizes="(max-width: 1023px) 100vw, 1200px"
+            placeholderLabel="Cover · 16:10"
+            priority
+          />
+        </div>
+      </section>
+
+      <section className="w-full px-6 pt-10 lg:px-30 lg:pt-18">
+        <div className="mx-auto flex w-full max-w-[640px] flex-col gap-10 lg:max-w-[1200px] lg:flex-row lg:items-start lg:gap-20">
+          <div className="flex min-w-0 flex-1 flex-col gap-5 lg:gap-6">
+            <h2 className="text-[24px] leading-8 tracking-[-0.03em] lg:text-[28px] lg:leading-[34px]">
+              {project.detail_heading ?? "Key features"}
+            </h2>
+
+            {project.features.length ? (
+              // Dividers above the first row and below the last, as in the
+              // design, with `divide-y` handling the ones in between.
+              <ol className="flex flex-col divide-y divide-border border-y border-border">
+                {project.features.map((feature, index) => (
+                  <li key={feature} className="flex gap-4 py-4 lg:gap-6 lg:py-[18px]">
+                    <span
+                      aria-hidden
+                      className="w-8 shrink-0 font-mono text-xs leading-[26px] text-primary"
                     >
-                      {link.label}
-                      <ExternalLink className="size-3.5" />
-                    </a>
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <p className="min-w-0 flex-1 text-[15px] leading-6 lg:text-base lg:leading-[26px]">
+                      {feature}
+                    </p>
                   </li>
                 ))}
-              </ul>
+              </ol>
             ) : (
-              <p className="mt-2.5 text-sm italic text-text-tertiary">
-                Repo / live link belum ditambahkan.
+              <p className="text-[15px] leading-6 text-text-tertiary">
+                Detail proyek belum ditambahkan.
               </p>
             )}
           </div>
-        </aside>
+
+          <aside className="flex flex-col gap-4 lg:w-[340px] lg:shrink-0">
+            {project.note_label || project.note_body ? (
+              <DetailCard label={project.note_label ?? "Notes"}>
+                <p className="text-sm leading-[22px] text-text-secondary">
+                  {project.note_body}
+                </p>
+              </DetailCard>
+            ) : null}
+
+            <DetailCard label="Links">
+              {hasLinks ? (
+                <div className="flex flex-col gap-3">
+                  {project.repo_url ? (
+                    <ExternalLink href={project.repo_url}>
+                      Repository
+                    </ExternalLink>
+                  ) : null}
+                  {project.live_url ? (
+                    <ExternalLink href={project.live_url}>
+                      Live site
+                    </ExternalLink>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="text-sm leading-[22px] text-text-tertiary">
+                  Repo / live link belum ditambahkan.
+                </p>
+              )}
+            </DetailCard>
+          </aside>
+        </div>
       </section>
 
-      <div className="mt-24 w-full">
-        <SiteFooter note={profile.footer_note} variant="compact" />
-      </div>
+      <div className="h-16 w-full lg:h-25" />
+
+      <SiteFooter note={profile.footer_note} name={profile.full_name} />
     </>
+  );
+}
+
+/** `surface` panel with the design's mono 11px uppercase label. */
+function DetailCard({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-3 rounded-md border border-border bg-surface px-6 py-5 lg:py-[22px]">
+      <p className="font-mono text-[11px] uppercase leading-4 tracking-[0.08em] text-text-tertiary">
+        {label}
+      </p>
+      {children}
+    </div>
   );
 }
