@@ -13,8 +13,11 @@ import type { ProjectView } from "@/lib/data/portfolio";
  * here and in the stack line below it; adding a `category` field later would
  * be the way to remove that.
  */
-function projectMeta(project: ProjectView): string | null {
-  const parts = project.is_featured
+function projectMeta(project: ProjectView, lead: boolean): string | null {
+  // "FEATURED" belongs to the one card actually rendered as the lead. Several
+  // rows can carry is_featured, and labelling all of them would make the word
+  // meaningless.
+  const parts = lead
     ? ["Featured", project.tech_tags[0]]
     : project.tech_tags.slice(0, 2);
 
@@ -22,8 +25,14 @@ function projectMeta(project: ProjectView): string | null {
   return meta ? meta.toUpperCase() : null;
 }
 
-function Meta({ project }: { project: ProjectView }) {
-  const meta = projectMeta(project);
+function Meta({
+  project,
+  lead = false,
+}: {
+  project: ProjectView;
+  lead?: boolean;
+}) {
+  const meta = projectMeta(project, lead);
   if (!meta) return null;
 
   return (
@@ -106,7 +115,7 @@ function FeaturedCard({ project }: { project: ProjectView }) {
       />
 
       <div className="flex flex-1 flex-col gap-3.5 p-5 lg:gap-4 lg:p-10">
-        <Meta project={project} />
+        <Meta project={project} lead />
 
         <h2 className="text-[28px] leading-[34px] tracking-[-0.03em] lg:text-[36px] lg:leading-[42px]">
           {project.title}

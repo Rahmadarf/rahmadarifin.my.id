@@ -19,6 +19,13 @@ export function SiteFooter({
 }) {
   const year = new Date().getFullYear();
 
+  // The stored note opens with its own copyright clause — "© 2026 Rahmad
+  // Arifin Susilo. Built with …" — which the first slot already renders. Drop
+  // that clause so the two slots do not say the same thing; a note written
+  // without one passes through untouched.
+  const builtWith =
+    note?.replace(/^\s*(?:©|\(c\))[^.]*\.\s*/i, "").trim() || FOOTER_BUILT_WITH;
+
   return (
     <footer className="w-full px-6 pb-10 pt-4 lg:px-30 lg:pt-8">
       <div className="mx-auto flex w-full max-w-[640px] flex-col gap-2.5 font-mono text-xs leading-4 lg:max-w-[1200px] lg:flex-row lg:items-center lg:justify-between lg:gap-6">
@@ -26,7 +33,7 @@ export function SiteFooter({
           &copy; {year} {name}
         </span>
 
-        <span className="text-text-tertiary">{note || FOOTER_BUILT_WITH}</span>
+        <span className="text-text-tertiary">{builtWith}</span>
 
         <Link
           href="#page-top"

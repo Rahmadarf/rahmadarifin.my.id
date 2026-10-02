@@ -86,6 +86,14 @@ export function NavBar() {
   const enter = reduceMotion ? { duration: 0 } : ENTER;
   const exit = reduceMotion ? { duration: 0 } : EXIT;
 
+  // AnimatePresence owns the sheet's unmount, so Radix's own close-time focus
+  // restore never runs — closing with Escape dropped focus on <body>. Put it
+  // back on the trigger here instead.
+  const onOpenChange = useCallback((next: boolean) => {
+    setOpen(next);
+    if (!next) triggerRef.current?.focus();
+  }, []);
+
   const navRef = useRef<HTMLElement | null>(null);
   const monogramRef = useRef<HTMLSpanElement | null>(null);
   const entranceStage = useEntranceStage();
@@ -121,7 +129,7 @@ export function NavBar() {
   }, [open]);
 
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen} modal={false}>
+    <Dialog.Root open={open} onOpenChange={onOpenChange} modal={false}>
       {/* Positioning is split off the pill so Motion owns the pill's transform
           outright. Sharing it with `-translate-x-1/2` would mean the entrance's
           `y` wiped out the centring. */}

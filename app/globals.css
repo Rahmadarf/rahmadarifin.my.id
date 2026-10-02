@@ -65,7 +65,11 @@
   --surface: #f2f2f4;
   --surface-alt: #e8e8ec;
   --text-secondary: #52525b;
-  --text-tertiary: #71717a;
+  /* Figma's value here is #71717A. Measured against the light theme it lands
+     at 4.3:1 on `surface` and 4.0:1 on `surface-alt`, under the 4.5:1 that AA
+     asks of body text — and this colour carries the mono meta lines, which sit
+     on both. Darkened by four steps to clear it everywhere (5.0 and 4.5). */
+  --text-tertiary: #67676f;
 }
 
 .dark {
