@@ -16,9 +16,14 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "bg-primary text-primary-foreground hover:brightness-110",
+        // `hover-lift` carries the 1px rise and its own transition; see
+        // globals.css, where reduced motion removes the movement outright.
+        primary:
+          "hover-lift bg-primary text-primary-foreground hover:bg-primary-hover",
+        // The design's "border → border-strong" is already this button's
+        // resting border, so the hover that reads is the fill arriving.
         secondary:
-          "border border-input text-foreground hover:border-primary/40 hover:bg-accent",
+          "border border-input text-foreground hover:bg-surface-alt",
         destructive: "bg-destructive text-white hover:bg-destructive/90",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",

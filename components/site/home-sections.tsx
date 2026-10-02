@@ -55,8 +55,20 @@ export function HeroSection({
   const iconLinks = socialLinks.filter((link) => link.platform !== "email");
 
   return (
-    <section className="w-full px-6 pb-10 pt-[125px] lg:px-30 lg:pb-18 lg:pt-[186px]">
-      <div className="mx-auto flex w-full max-w-[640px] flex-col gap-7 lg:max-w-[1200px] lg:flex-row lg:items-end lg:gap-20">
+    <section className="relative isolate w-full px-6 pb-10 pt-[125px] lg:px-30 lg:pb-18 lg:pt-[186px]">
+      {/* The whole backdrop. `isolate` on the section keeps -z-10 from sinking
+          behind the page, and the wrapper's overflow is what stops the glow
+          widening the document on a narrow screen. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+      >
+        <div className="hero-glow absolute left-1/2 top-[30%] h-[560px] w-[620px] -translate-x-1/2 -translate-y-1/2 md:left-[62%] md:top-[45%] md:h-[640px] md:w-[1000px]" />
+        <div className="hero-grid absolute inset-0" />
+        <div className="hero-hairline absolute inset-x-0 bottom-0 h-px" />
+      </div>
+
+      <div className="relative z-10 mx-auto flex w-full max-w-[640px] flex-col gap-7 lg:max-w-[1200px] lg:flex-row lg:items-end lg:gap-20">
         <div className="flex flex-col items-start gap-7 lg:w-[740px] lg:shrink-0">
           {profile.availability_badge ? (
             <p className="flex items-center gap-2 rounded-full bg-accent px-3 py-1.5 font-mono text-[11px] leading-4 text-primary lg:text-xs">
@@ -92,9 +104,10 @@ export function HeroSection({
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-text-secondary transition-colors hover:text-primary"
+                    className="text-text-secondary transition-colors hover:text-foreground"
                   >
-                    {SOCIAL_LABELS[link.platform]} &#8599;
+                    {SOCIAL_LABELS[link.platform]}{" "}
+                    <span className="hover-arrow-up">&#8599;</span>
                   </a>
                 </li>
               ))}
@@ -116,7 +129,7 @@ export function HeroSection({
  */
 function ProfileReadout() {
   return (
-    <div className="w-full overflow-hidden rounded-md border border-border bg-surface lg:flex-1">
+    <div className="w-full overflow-hidden rounded-md border border-border bg-surface transition-colors hover:border-input lg:flex-1">
       <p className="px-4 py-3 font-mono text-xs leading-4 text-text-tertiary lg:px-5 lg:py-3.5">
         {PROFILE_READOUT_PATH}
       </p>
@@ -125,7 +138,13 @@ function ProfileReadout() {
 
       <dl className="flex flex-col gap-3 p-4 font-mono text-xs leading-[18px] lg:px-5 lg:py-[18px]">
         {PROFILE_READOUT.map((row) => (
-          <div key={row.key} className="flex gap-3 lg:gap-4">
+          // The hover fill reaches past the text on all four sides, and the
+          // negative margins hand that space back to the layout so the rows
+          // keep their resting rhythm.
+          <div
+            key={row.key}
+            className="-mx-3 -my-2 flex gap-3 rounded-sm px-3 py-2 transition-colors hover:bg-surface-alt/50 lg:gap-4"
+          >
             <dt className="w-16 shrink-0 text-text-tertiary lg:w-[72px]">
               {row.key}
             </dt>

@@ -66,11 +66,11 @@ export function ProjectCard({
   if (variant === "row") return <ProjectRow project={project} index={index ?? 1} />;
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-md border border-border bg-surface">
+    <article className="group flex flex-col overflow-hidden rounded-md border border-border bg-surface transition-colors hover:border-input">
       <MediaFrame
         src={project.thumbnailUrl}
         alt={`Pratinjau ${project.title}`}
-        className="h-[190px] w-full"
+        className="hover-zoom h-[190px] w-full"
         sizes="(max-width: 1023px) 100vw, 588px"
       />
 
@@ -93,7 +93,7 @@ export function ProjectCard({
           href={`/projects/${project.slug}`}
           className="text-sm font-medium leading-[18px] text-primary hover:underline"
         >
-          View project &rarr;
+          View project <span className="hover-arrow">&rarr;</span>
         </Link>
       </div>
     </article>
@@ -106,11 +106,11 @@ export function ProjectCard({
  */
 function FeaturedCard({ project }: { project: ProjectView }) {
   return (
-    <article className="flex flex-col overflow-hidden rounded-md border border-border bg-surface lg:flex-row">
+    <article className="group flex flex-col overflow-hidden rounded-md border border-border bg-surface transition-colors hover:border-input lg:flex-row">
       <MediaFrame
         src={project.thumbnailUrl ?? project.coverUrl}
         alt={`Pratinjau ${project.title}`}
-        className="h-[210px] w-full shrink-0 lg:h-[420px] lg:w-[640px]"
+        className="hover-zoom h-[210px] w-full shrink-0 lg:h-[420px] lg:w-[640px]"
         sizes="(max-width: 1023px) 100vw, 640px"
       />
 
@@ -168,11 +168,11 @@ function ProjectRow({
     // desktop list would double its first line.
     <div>
       {/* Mobile: card */}
-      <article className="flex flex-col overflow-hidden rounded-md border border-border bg-surface lg:hidden">
+      <article className="group flex flex-col overflow-hidden rounded-md border border-border bg-surface transition-colors hover:border-input lg:hidden">
         <MediaFrame
           src={project.thumbnailUrl}
           alt={`Pratinjau ${project.title}`}
-          className="h-[200px] w-full"
+          className="hover-zoom h-[200px] w-full"
           sizes="100vw"
         />
 
@@ -202,7 +202,7 @@ function ProjectRow({
       </article>
 
       {/* Desktop: row */}
-      <article className="hidden gap-10 py-8 lg:flex">
+      <article className="group hidden gap-10 py-8 lg:flex">
         <p className="w-10 shrink-0 font-mono text-[13px] leading-[18px] text-text-secondary">
           {position}
         </p>
@@ -210,7 +210,7 @@ function ProjectRow({
         <MediaFrame
           src={project.thumbnailUrl}
           alt={`Pratinjau ${project.title}`}
-          className="h-[180px] w-[300px] shrink-0 rounded-md border border-border"
+          className="hover-zoom h-[180px] w-[300px] shrink-0 rounded-md border border-border transition-colors group-hover:border-input"
           sizes="300px"
         />
 
@@ -277,7 +277,7 @@ export function ExternalLink({
         className,
       )}
     >
-      {children} &#8599;
+      {children} <span className="hover-arrow-up">&#8599;</span>
     </a>
   );
 }

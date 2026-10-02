@@ -28,6 +28,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 6px);
+  --color-primary-hover: var(--primary-hover);
   --color-surface: var(--surface);
   --color-surface-alt: var(--surface-alt);
   --color-text-secondary: var(--text-secondary);
@@ -68,6 +69,9 @@
   --border: rgba(0,0,0,0.09);
   --input: rgba(0,0,0,0.20);
   --ring: #0a63ca;
+  /* Primary button hover: the design darkens the light accent 8% toward
+     black and lightens the dark one 8% toward white. */
+  --primary-hover: color-mix(in oklab, black 8%, var(--primary));
   --surface: #f2f2f4;
   --surface-alt: #e8e8ec;
   --text-secondary: #52525b;
@@ -96,6 +100,7 @@
   --border: rgba(255,255,255,0.09);
   --input: rgba(255,255,255,0.18);
   --ring: oklch(0.74 0.14 257);
+  --primary-hover: color-mix(in oklab, white 8%, var(--primary));
   --surface: #121216;
   --surface-alt: #1a1a20;
   --text-secondary: #a1a1aa;
@@ -191,4 +196,131 @@ html[data-splash="show"] .splash-overlay {
 
 .dark {
   --dot-grid-color: rgba(255, 255, 255, 0.07);
+}
+
+/* Hero backdrop ------------------------------------------------------------
+   Three decorative layers, all CSS: no canvas, no images, no noise, no JS.
+   Back to front they are the glow, the grid, and a hairline on the bottom
+   edge. They live behind the hero only — the grid is deliberately not a
+   site-wide texture.
+
+   The accent here is --primary, which is the solid blue (#6FACFF dark,
+   #0A63CA light). The --accent token in this project is the 10–12% wash used
+   for soft fills, so mixing it again would land near 1%. */
+:root {
+  --hero-grid-line: rgba(0, 0, 0, 0.06);
+  --hero-glow: color-mix(in oklab, var(--primary) 8%, transparent);
+  --hero-hairline: color-mix(in oklab, var(--primary) 45%, transparent);
+}
+
+.dark {
+  --hero-grid-line: rgba(255, 255, 255, 0.05);
+  --hero-glow: color-mix(in oklab, var(--primary) 13%, transparent);
+  --hero-hairline: color-mix(in oklab, var(--primary) 45%, transparent);
+}
+
+/* The mask is what makes this read as a backdrop rather than graph paper: the
+   grid is at full strength behind the headline and the readout card, then
+   falls away to nothing at the edges and the bottom. */
+.hero-grid {
+  background-image:
+    linear-gradient(to right, var(--hero-grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--hero-grid-line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(
+    ellipse at 62% 45%,
+    #000 0%,
+    rgba(0, 0, 0, 0.5) 60%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    ellipse at 62% 45%,
+    #000 0%,
+    rgba(0, 0, 0, 0.5) 60%,
+    transparent 100%
+  );
+}
+
+@media (min-width: 48rem) {
+  .hero-grid {
+    background-size: 64px 64px;
+  }
+}
+
+/* `closest-side` rather than a blur filter: the falloff is the gradient's own,
+   which costs nothing to composite and cannot bleed outside the element. */
+.hero-glow {
+  background: radial-gradient(closest-side, var(--hero-glow), transparent);
+}
+
+.hero-hairline {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--hero-hairline),
+    transparent
+  );
+}
+
+/* Hover movement -----------------------------------------------------------
+   Colour, border and background hovers are Tailwind `hover:` utilities at the
+   call site — v4 already scopes those to @media (hover: hover). What lives
+   here is the movement, because it has to be nulled under reduced motion
+   rather than shortened: a 1px jump is still a jump.
+
+   Transform-only, so every one of these composites without laying out or
+   painting again. Nothing uses `transition: all`. */
+@media (hover: hover) {
+  .hover-lift {
+    transition:
+      translate 150ms ease-out,
+      background-color 150ms ease-out,
+      border-color 150ms ease-out;
+  }
+  .hover-lift:hover {
+    translate: 0 -1px;
+  }
+  .hover-lift:active {
+    translate: 0 0;
+  }
+
+  /* 250ms, not 150: the thumbnail travels further than a nudge. */
+  .hover-zoom img {
+    transition: scale 250ms ease-out;
+  }
+  .group:hover .hover-zoom img {
+    scale: 1.03;
+  }
+
+  .hover-arrow,
+  .hover-arrow-up {
+    display: inline-block;
+    transition: translate 150ms ease-out;
+  }
+  .group:hover .hover-arrow {
+    translate: 2px -2px;
+  }
+  a:hover > .hover-arrow-up {
+    translate: 0 -1px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hover-lift:hover,
+  .hover-lift:active {
+    translate: none;
+  }
+  .group:hover .hover-zoom img {
+    scale: none;
+  }
+  .group:hover .hover-arrow,
+  a:hover > .hover-arrow-up {
+    translate: none;
+  }
+  .hover-lift,
+  .hover-zoom img,
+  .hover-arrow,
+  .hover-arrow-up {
+    transition: none;
+  }
 }
