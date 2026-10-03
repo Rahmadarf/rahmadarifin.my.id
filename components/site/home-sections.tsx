@@ -7,6 +7,7 @@ import {
   SectionLabel,
 } from "@/components/site/section";
 import { TechTag } from "@/components/site/tech-tag";
+import { cn } from "@/lib/utils";
 import { SOCIAL_LABELS, socialHandle } from "@/lib/social";
 import {
   HERO_PRIMARY_CTA,
@@ -150,13 +151,20 @@ function ProfileReadout() {
   );
 }
 
-export function ProjectsSection({
-  lead,
-  grid,
-}: {
-  lead: ProjectView | null;
-  grid: ProjectView[];
-}) {
+/**
+ * Projects: one lead card above two supporting ones.
+ *
+ * Selection lives here rather than in the page so the "nothing published"
+ * case is handled in one place: the lead is the first row flagged featured,
+ * falling back to the first by sort order, and the next two fill the grid.
+ * Fewer than three degrades to whatever exists; zero renders nothing at all.
+ */
+export function ProjectsSection({ projects }: { projects: ProjectView[] }) {
+  if (!projects.length) return null;
+
+  const lead = projects.find((project) => project.is_featured) ?? projects[0];
+  const grid = projects.filter((project) => project.id !== lead.id).slice(0, 2);
+
   const allProjects = (
     <>
       All projects <span aria-hidden>&rarr;</span>
@@ -164,7 +172,11 @@ export function ProjectsSection({
   );
 
   return (
-    <Section id="projects">
+    <Section
+      id="projects"
+      className="pb-18 pt-16 lg:pb-28 lg:pt-24"
+      innerClassName="gap-8 lg:gap-12"
+    >
       <SectionHeader
         number="02"
         label="Projects"
@@ -172,29 +184,32 @@ export function ProjectsSection({
         action={
           <Link
             href="/projects"
-            className="text-sm font-medium leading-[18px] text-primary hover:underline"
+            className="rounded-sm text-sm font-medium leading-[18px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             {allProjects}
           </Link>
         }
       />
 
-      {lead ? (
-        <ProjectCard project={lead} variant="featured" />
-      ) : (
-        <EmptyState>Belum ada proyek yang dipublikasikan.</EmptyState>
-      )}
+      <ProjectCard project={lead} variant="featured" />
 
+      {/* A lone supporting card spans the row rather than sitting in half of
+          one with a hole beside it. */}
       {grid.length ? (
-        <div className="grid gap-7 md:grid-cols-2 md:gap-6">
+        <div
+          className={cn(
+            "grid gap-4 lg:gap-6",
+            grid.length > 1 && "md:grid-cols-2",
+          )}
+        >
           {grid.map((project) => (
             <ProjectCard key={project.id} project={project} />
           ))}
         </div>
       ) : null}
 
-      {/* The header's action moves down here below `lg`, as a full-width
-          secondary button — the mobile frame has no link in the header. */}
+      {/* The header action moves down here below `lg`; the mobile frame has
+          no link in the header. */}
       <Button variant="secondary" asChild className="w-full lg:hidden">
         <Link href="/projects">{allProjects}</Link>
       </Button>

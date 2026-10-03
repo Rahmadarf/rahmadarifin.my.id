@@ -65,85 +65,177 @@ export function ProjectCard({
   if (variant === "featured") return <FeaturedCard project={project} />;
   if (variant === "row") return <ProjectRow project={project} index={index ?? 1} />;
 
+  return <HomeCard project={project} />;
+}
+
+/** Initials for a project with no screenshot — "E-commerce Flutter" → "EF". */
+function initials(title: string): string {
+  return title
+    .split(/[\s—–-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]!.toUpperCase())
+    .join("");
+}
+
+function Thumbnail({
+  project,
+  className,
+  sizes,
+  priority = false,
+}: {
+  project: ProjectView;
+  className?: string;
+  sizes: string;
+  priority?: boolean;
+}) {
   return (
-    <article className="group flex flex-col overflow-hidden rounded-md border border-border bg-surface transition-colors hover:border-input">
-      <MediaFrame
-        src={project.thumbnailUrl}
-        alt={`Pratinjau ${project.title}`}
-        className="hover-zoom h-[190px] w-full"
-        sizes="(max-width: 1023px) 100vw, 588px"
+    <MediaFrame
+      src={project.thumbnailUrl ?? project.coverUrl}
+      alt={`${project.title} screenshot`}
+      sizes={sizes}
+      priority={priority}
+      imageClassName="object-top"
+      // No caption in production: an empty slot reads as the project's
+      // initials on a flat surface rather than as a note to the developer.
+      fallback={
+        <span
+          aria-hidden
+          className="absolute inset-0 flex items-center justify-center font-mono text-2xl tracking-[0.1em] text-text-tertiary"
+        >
+          {initials(project.title)}
+        </span>
+      }
+      className={cn("hover-zoom w-full bg-surface-alt", className)}
+    />
+  );
+}
+
+/**
+ * The lead project: media and copy side by side above `lg`, stacked below it.
+ *
+ * Not a single link — it carries two calls to action — so the card itself
+ * only brightens its border and zooms the thumbnail on hover, and the buttons
+ * bring their own states.
+ */
+function FeaturedCard({ project }: { project: ProjectView }) {
+  return (
+    <article className="group flex flex-col overflow-hidden rounded-md border border-border bg-surface transition-colors hover:border-input xl:flex-row xl:items-stretch">
+      {/* Figma draws this side by side at 1440 with a 660px thumbnail — 55% of
+          the content column. It only turns horizontal at `xl`: between 1024 and
+          1279 the column is narrow enough that the copy would be taller than a
+          16:10 thumbnail, which would either squash the ratio or leave a band
+          of empty surface under the image. Stacked, both stay honest. */}
+      <Thumbnail
+        project={project}
+        className="aspect-[16/10] xl:w-[55%] xl:shrink-0 xl:self-start"
+        sizes="(max-width: 1279px) 100vw, 55vw"
       />
 
-      <div className="flex flex-col gap-2.5 p-5">
-        <Meta project={project} />
+      <div className="flex flex-1 flex-col justify-between gap-5 p-5 lg:p-6 xl:p-10">
+        <div className="flex flex-col gap-3">
+          <Meta project={project} lead />
 
-        <h3 className="text-[20px] leading-[26px] tracking-[-0.02em]">
-          {project.title}
-        </h3>
+          <h3 className="text-[28px] font-medium leading-tight tracking-[-0.025em] lg:text-[32px]">
+            {project.title}
+          </h3>
 
-        {project.summary ? (
-          <p className="text-sm leading-[22px] text-text-secondary">
-            {project.summary}
-          </p>
-        ) : null}
+          {project.summary ? (
+            // Clamped: the stored summaries run longer than the frame's, and
+            // without this the copy outgrows the thumbnail and the 16:10
+            // ratio stops holding on desktop.
+            <p className="line-clamp-3 text-[15px] leading-[23px] text-text-secondary lg:text-base lg:leading-[26px]">
+              {project.summary}
+            </p>
+          ) : null}
+        </div>
 
-        <Stack tags={project.tech_tags} />
+        <div className="flex flex-col gap-5">
+          <TagRow tags={project.tech_tags} />
 
-        <Link
-          href={`/projects/${project.slug}`}
-          className="text-sm font-medium leading-[18px] text-primary hover:underline"
-        >
-          View project <span className="hover-arrow">&rarr;</span>
-        </Link>
+          <div className="flex flex-col gap-2.5 sm:flex-row">
+            <Button asChild className="w-full sm:w-auto">
+              <Link href={`/projects/${project.slug}`}>View project</Link>
+            </Button>
+
+            {/* Only when there is something to open. */}
+            {project.live_url ? (
+              <Button variant="secondary" asChild className="w-full sm:w-auto">
+                <a
+                  href={project.live_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Live demo <span className="hover-arrow-up">&#8599;</span>
+                </a>
+              </Button>
+            ) : null}
+          </div>
+        </div>
       </div>
     </article>
   );
 }
 
 /**
- * The lead project: media and copy side by side on desktop, stacked on mobile,
- * with a larger title than the grid cards so the hierarchy reads at a glance.
+ * A supporting project. The whole card is the link — hence `aria-label`, so
+ * its accessible name is the title rather than every word inside it.
  */
-function FeaturedCard({ project }: { project: ProjectView }) {
+function HomeCard({ project }: { project: ProjectView }) {
   return (
-    <article className="group flex flex-col overflow-hidden rounded-md border border-border bg-surface transition-colors hover:border-input lg:flex-row">
-      <MediaFrame
-        src={project.thumbnailUrl ?? project.coverUrl}
-        alt={`Pratinjau ${project.title}`}
-        className="hover-zoom h-[210px] w-full shrink-0 lg:h-[420px] lg:w-[640px]"
-        sizes="(max-width: 1023px) 100vw, 640px"
+    <Link
+      href={`/projects/${project.slug}`}
+      aria-label={project.title}
+      className="group flex h-full flex-col overflow-hidden rounded-md border border-border bg-surface transition-colors hover:border-input focus-visible:border-input focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+    >
+      <Thumbnail
+        project={project}
+        className="aspect-[2/1]"
+        sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 588px"
       />
 
-      <div className="flex flex-1 flex-col gap-3.5 p-5 lg:gap-4 lg:p-10">
-        <Meta project={project} lead />
+      <div className="flex flex-col gap-3 p-5 lg:p-6">
+        <div className="flex items-start justify-between gap-3 font-mono text-text-tertiary">
+          <Meta project={project} />
+          <span
+            aria-hidden
+            className="hover-arrow shrink-0 text-sm leading-4 transition-colors group-hover:text-foreground"
+          >
+            &#8599;
+          </span>
+        </div>
 
-        <h2 className="text-[28px] leading-[34px] tracking-[-0.03em] lg:text-[36px] lg:leading-[42px]">
+        <h3 className="text-[20px] font-medium leading-tight tracking-[-0.015em] text-text-secondary transition-colors group-hover:text-foreground">
           {project.title}
-        </h2>
+        </h3>
 
         {project.summary ? (
-          <p className="text-[15px] leading-6 text-text-secondary lg:text-base lg:leading-[26px]">
+          <p className="line-clamp-3 text-[15px] leading-[22px] text-text-secondary">
             {project.summary}
           </p>
         ) : null}
 
-        <Stack tags={project.tech_tags} />
-
-        <div className="flex flex-col gap-2.5 lg:flex-row lg:gap-3">
-          <Button asChild className="w-full lg:w-auto">
-            <Link href={`/projects/${project.slug}`}>View case study</Link>
-          </Button>
-
-          {project.live_url ? (
-            <Button variant="secondary" asChild className="w-full lg:w-auto">
-              <a href={project.live_url} target="_blank" rel="noopener noreferrer">
-                Live demo &#8599;
-              </a>
-            </Button>
-          ) : null}
-        </div>
+        <TagRow tags={project.tech_tags} />
       </div>
-    </article>
+    </Link>
+  );
+}
+
+/** Up to four stack chips, wrapping. */
+function TagRow({ tags }: { tags: string[] }) {
+  if (!tags.length) return null;
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {tags.slice(0, 4).map((tag) => (
+        <span
+          key={tag}
+          className="rounded-[4px] border border-border px-2 py-[3px] font-mono text-[11px] leading-4 text-text-secondary transition-colors hover:border-primary/40 hover:text-primary"
+        >
+          {tag}
+        </span>
+      ))}
+    </div>
   );
 }
 
