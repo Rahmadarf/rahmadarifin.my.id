@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { MediaFrame } from "@/components/site/media-frame";
 import { ProjectCard } from "@/components/site/project-card";
 import {
   Section,
@@ -9,14 +8,9 @@ import {
 } from "@/components/site/section";
 import { TechTag } from "@/components/site/tech-tag";
 import { SOCIAL_LABELS, socialHandle } from "@/lib/social";
-import { parseEducationEntry, splitLines } from "@/lib/profile-text";
 import {
-  ABOUT_PHOTO_CAPTION,
   HERO_PRIMARY_CTA,
   HERO_SECONDARY_CTA,
-  IDENTITY_ROLE,
-  PLACEHOLDER_CERTIFICATIONS,
-  PLACEHOLDER_EDUCATION,
   PROFILE_READOUT,
   PROFILE_READOUT_PATH,
   SECTION_TITLES,
@@ -153,131 +147,6 @@ function ProfileReadout() {
         ))}
       </dl>
     </div>
-  );
-}
-
-/**
- * About: the photo and identity lockup beside the bio and two info cards.
- *
- * Every value comes from the profile row, same as the block this replaces —
- * `photo_path`, `full_name`, `alias`, `bio`, `certifications`, `education`.
- * The two free-text columns are split into lists at render time; see
- * lib/profile-text.ts.
- */
-export function AboutSection({ profile }: { profile: PublicProfile }) {
-  const focusAreas = splitLines(profile.certifications);
-  const education = splitLines(profile.education).map(parseEducationEntry);
-
-  const identity = [
-    profile.alias ? `aka ${profile.alias}` : null,
-    IDENTITY_ROLE.toUpperCase(),
-  ]
-    .filter(Boolean)
-    .join(" · ");
-
-  return (
-    <Section id="about">
-      <SectionHeader number="01" label="About" title={SECTION_TITLES.about} />
-
-      <div className="flex flex-col gap-7 lg:flex-row lg:items-start lg:gap-20">
-        <div className="flex flex-col lg:w-[360px] lg:shrink-0">
-          <MediaFrame
-            src={profile.photoUrl}
-            alt={profile.full_name}
-            className="h-[360px] w-full rounded-md border border-border lg:h-[440px]"
-            sizes="(max-width: 1023px) 100vw, 360px"
-            placeholderLabel={ABOUT_PHOTO_CAPTION}
-          />
-
-          <div className="flex flex-col gap-1 pt-4">
-            <p className="text-[20px] leading-[26px] tracking-[-0.02em]">
-              {profile.full_name}
-            </p>
-            <p className="font-mono text-xs leading-[18px] text-text-secondary">
-              {identity}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex min-w-0 flex-1 flex-col gap-7 lg:gap-10">
-          {profile.bio ? (
-            <p className="text-[18px] leading-7 tracking-[-0.01em] lg:max-w-[680px] lg:text-2xl lg:leading-9 lg:tracking-[-0.015em]">
-              {profile.bio}
-            </p>
-          ) : null}
-
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch lg:gap-6">
-            <InfoCard label="Focus areas">
-              {focusAreas.length ? (
-                <ol className="flex flex-col gap-3.5">
-                  {focusAreas.map((item, index) => (
-                    <li key={item} className="flex gap-3.5">
-                      <span
-                        aria-hidden
-                        className="shrink-0 font-mono text-xs leading-[22px] text-primary"
-                      >
-                        {String(index + 1).padStart(2, "0")}
-                      </span>
-                      <span className="min-w-0 flex-1 text-[15px] leading-[22px]">
-                        {item}
-                      </span>
-                    </li>
-                  ))}
-                </ol>
-              ) : (
-                <CardPlaceholder>{PLACEHOLDER_CERTIFICATIONS}</CardPlaceholder>
-              )}
-            </InfoCard>
-
-            <InfoCard label="Education">
-              {education.length ? (
-                <div className="flex flex-col gap-3.5">
-                  {education.map((entry) => (
-                    <div key={entry.title} className="flex flex-col gap-1">
-                      <p className="text-[15px] font-medium leading-[22px]">
-                        {entry.title}
-                      </p>
-                      {entry.meta ? (
-                        <p className="font-mono text-xs leading-[18px] text-text-secondary">
-                          {entry.meta}
-                        </p>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <CardPlaceholder>{PLACEHOLDER_EDUCATION}</CardPlaceholder>
-              )}
-            </InfoCard>
-          </div>
-        </div>
-      </div>
-    </Section>
-  );
-}
-
-function InfoCard({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-1 flex-col gap-3.5 rounded-md border border-border bg-surface px-6 py-[22px]">
-      <p className="font-mono text-[11px] uppercase leading-4 tracking-[0.08em] text-text-tertiary">
-        {label}
-      </p>
-      {children}
-    </div>
-  );
-}
-
-function CardPlaceholder({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="rounded-sm border border-dashed border-input p-3.5 text-sm leading-[22px] text-text-tertiary">
-      {children}
-    </p>
   );
 }
 
