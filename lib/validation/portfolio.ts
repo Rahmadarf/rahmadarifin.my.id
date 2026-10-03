@@ -83,6 +83,7 @@ export const projectSchema = z
     id: optionalRowId,
     title: requiredText(120, "Nama proyek"),
     slug: text(80),
+    category: optionalText(60),
     summary: optionalText(2000),
     description: optionalText(4000),
     detail_heading: optionalText(120),

@@ -7,19 +7,17 @@ import type { ProjectView } from "@/lib/data/portfolio";
 /**
  * The design's mono meta line — "FEATURED · WEB APP", "WEB PLATFORM · LARAVEL".
  *
- * There is no category column in the database and inventing one is out of
- * scope, so the line is built from what the row does carry: the featured flag
- * and the first stack tags. That means a project's leading tag shows up both
- * here and in the stack line below it; adding a `category` field later would
- * be the way to remove that.
+ * `category` is the editorial label; when it is empty the line falls back to
+ * the project's first stack tag, which repeats a tag from the row below but
+ * is at least accurate.
  */
 function projectMeta(project: ProjectView, lead: boolean): string | null {
+  const label = project.category?.trim() || project.tech_tags[0];
+
   // "FEATURED" belongs to the one card actually rendered as the lead. Several
   // rows can carry is_featured, and labelling all of them would make the word
   // meaningless.
-  const parts = lead
-    ? ["Featured", project.tech_tags[0]]
-    : project.tech_tags.slice(0, 2);
+  const parts = lead ? ["Featured", label] : [label];
 
   const meta = parts.filter(Boolean).join(" · ");
   return meta ? meta.toUpperCase() : null;
@@ -205,7 +203,9 @@ function HomeCard({ project }: { project: ProjectView }) {
           </span>
         </div>
 
-        <h3 className="text-[20px] font-medium leading-tight tracking-[-0.015em] text-text-secondary transition-colors group-hover:text-foreground">
+        {/* Full `fg` idle and on hover: the v2 frames draw it that way, and the
+            card already signals itself through its border and the arrow. */}
+        <h3 className="text-[20px] font-medium leading-tight tracking-[-0.015em]">
           {project.title}
         </h3>
 

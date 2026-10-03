@@ -49,6 +49,7 @@ export type ProjectRow = {
   owner_id: string;
   slug: string;
   title: string;
+  category: string | null;
   summary: string;
   description: string;
   detail_heading: string | null;

@@ -157,13 +157,14 @@ function ProfileReadout() {
  * Selection lives here rather than in the page so the "nothing published"
  * case is handled in one place: the lead is the first row flagged featured,
  * falling back to the first by sort order, and the next two fill the grid.
- * Fewer than three degrades to whatever exists; zero renders nothing at all.
+ * Fewer than three degrades to whatever exists; zero keeps the heading and
+ * the section id so the navbar anchor stays valid, and says so in one line.
  */
 export function ProjectsSection({ projects }: { projects: ProjectView[] }) {
-  if (!projects.length) return null;
-
   const lead = projects.find((project) => project.is_featured) ?? projects[0];
-  const grid = projects.filter((project) => project.id !== lead.id).slice(0, 2);
+  const grid = lead
+    ? projects.filter((project) => project.id !== lead.id).slice(0, 2)
+    : [];
 
   const allProjects = (
     <>
@@ -182,16 +183,26 @@ export function ProjectsSection({ projects }: { projects: ProjectView[] }) {
         label="Projects"
         title={SECTION_TITLES.projects}
         action={
-          <Link
-            href="/projects"
-            className="rounded-sm text-sm font-medium leading-[18px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-          >
-            {allProjects}
-          </Link>
+          lead ? (
+            <Link
+              href="/projects"
+              className="rounded-sm text-sm font-medium leading-[18px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              {allProjects}
+            </Link>
+          ) : null
         }
       />
 
-      <ProjectCard project={lead} variant="featured" />
+      {/* The section keeps its heading and its id even with nothing to show,
+          so the navbar's /#projects anchor never points at a gap. */}
+      {lead ? (
+        <ProjectCard project={lead} variant="featured" />
+      ) : (
+        <p className="text-[15px] leading-6 text-text-secondary">
+          Projects will appear here soon.
+        </p>
+      )}
 
       {/* A lone supporting card spans the row rather than sitting in half of
           one with a hole beside it. */}
@@ -210,9 +221,11 @@ export function ProjectsSection({ projects }: { projects: ProjectView[] }) {
 
       {/* The header action moves down here below `lg`; the mobile frame has
           no link in the header. */}
-      <Button variant="secondary" asChild className="w-full lg:hidden">
-        <Link href="/projects">{allProjects}</Link>
-      </Button>
+      {lead ? (
+        <Button variant="secondary" asChild className="w-full lg:hidden">
+          <Link href="/projects">{allProjects}</Link>
+        </Button>
+      ) : null}
     </Section>
   );
 }
