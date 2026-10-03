@@ -58,12 +58,6 @@ export const SPLASH_ROLES = [
   "Vibe Coder",
 ] as const;
 
-export const PLACEHOLDER_CERTIFICATIONS =
-  "[ To be filled in — formal certifications (bootcamp/course) or a list of core focus areas ]";
-
-export const PLACEHOLDER_EDUCATION =
-  "[ To be filled in — institution name · major/level · start–end year ]";
-
 // --- Copy with no column behind it ---------------------------------------
 //
 // Everything below is hardcoded on purpose. These are elements the redesign
@@ -89,18 +83,43 @@ export const SECTION_TITLES = {
  */
 export const IDENTITY_ROLE = "Web developer";
 
-/** Caption on the About photo slot while no photo is uploaded. */
-export const ABOUT_PHOTO_CAPTION = "Professional photo · 4:5";
-
 /** The terminal-style card in the hero: its prompt and its key/value rows. */
 export const PROFILE_READOUT_PATH = "~/rahmad.profile";
+
+/** Shown in the hero readout and again on the About status pill. */
+export const TIMEZONE_LABEL = "Asia/Jakarta · UTC+7";
 
 export const PROFILE_READOUT: { key: string; value: string }[] = [
   { key: "role", value: "Web developer" },
   { key: "stack", value: "Next.js · Laravel · Supabase" },
   { key: "language", value: "TypeScript · Tailwind CSS" },
   { key: "database", value: "PostgreSQL" },
-  { key: "timezone", value: "Asia/Jakarta · UTC+7" },
+  { key: "timezone", value: TIMEZONE_LABEL },
+];
+
+/**
+ * The About section's focus rows.
+ *
+ * Hardcoded, and this is a step back from where the previous pass had it: the
+ * titles used to come from `profile.certifications`. The redesign pairs each
+ * row with its own stack tags, and there is no column for those — so keeping
+ * half the row editable and half of it fixed would have been worse than
+ * saying plainly that the whole block lives here. `certifications` is no
+ * longer rendered anywhere on the public site.
+ */
+export const FOCUS_AREAS: { title: string; tags: string[] }[] = [
+  {
+    title: "Design systems & UI/UX",
+    tags: ["Figma", "Tailwind CSS", "shadcn/ui"],
+  },
+  {
+    title: "Full-stack with Next.js + Supabase",
+    tags: ["Next.js", "Supabase", "PostgreSQL"],
+  },
+  {
+    title: "Laravel + Inertia.js + React",
+    tags: ["Laravel", "Inertia.js", "React", "TypeScript"],
+  },
 ];
 
 /**

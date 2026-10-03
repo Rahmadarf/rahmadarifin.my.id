@@ -28,3 +28,26 @@ export function parseEducationEntry(line: string): EducationEntry {
     meta: line.slice(separator + 1).trim() || null,
   };
 }
+
+// Stand-in copy that reached the database from the seed, or that an editor
+// pasted out of the design. None of it should ever be served.
+const PLACEHOLDER_PATTERNS = [
+  /20xx/i,
+  /^\s*\[.*\]\s*$/,
+  /^(institution name|certification or course|program|issuer)$/i,
+];
+
+/** True when an education line is filler rather than real content. */
+export function isPlaceholderEducation(entry: EducationEntry): boolean {
+  const whole = [entry.title, entry.meta].filter(Boolean).join(" — ");
+  return PLACEHOLDER_PATTERNS.some(
+    (pattern) => pattern.test(whole) || pattern.test(entry.title),
+  );
+}
+
+/** Real education entries only; an all-placeholder list comes back empty. */
+export function publishedEducation(value: string | null): EducationEntry[] {
+  return splitLines(value)
+    .map(parseEducationEntry)
+    .filter((entry) => !isPlaceholderEducation(entry));
+}

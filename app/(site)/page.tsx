@@ -1,5 +1,5 @@
+import { AboutSection } from "@/components/site/about-section";
 import {
-  AboutSection,
   ContactSection,
   HeroSection,
   JourneySection,
