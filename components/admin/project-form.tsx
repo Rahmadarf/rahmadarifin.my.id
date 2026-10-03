@@ -82,6 +82,21 @@ export function ProjectForm({
         </div>
 
         <Field
+          label="Category"
+          htmlFor="category"
+          error={errors.category}
+          hint="Muncul di baris meta kartu, mis. “Web app”. Kosongkan untuk memakai tag pertama."
+        >
+          <TextField
+            name="category"
+            maxLength={60}
+            placeholder="Web app"
+            defaultValue={project?.category ?? ""}
+            error={errors.category}
+          />
+        </Field>
+
+        <Field
           label="Tech Tags"
           htmlFor="tech_tags"
           error={errors.tech_tags}

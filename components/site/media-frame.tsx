@@ -12,15 +12,20 @@ export function MediaFrame({
   src,
   alt,
   className,
+  imageClassName,
   sizes = "(max-width: 1023px) 100vw, 640px",
   placeholderLabel = "Screenshot · 16:10",
+  fallback,
   priority = false,
 }: {
   src: string | null;
   alt: string;
   className?: string;
+  imageClassName?: string;
   sizes?: string;
   placeholderLabel?: string;
+  /** Rendered instead of the caption when there is no image. */
+  fallback?: React.ReactNode;
   priority?: boolean;
 }) {
   return (
@@ -32,8 +37,10 @@ export function MediaFrame({
           fill
           sizes={sizes}
           priority={priority}
-          className="object-cover"
+          className={cn("object-cover", imageClassName)}
         />
+      ) : fallback ? (
+        fallback
       ) : placeholderLabel ? (
         <span className="absolute inset-0 flex items-center justify-center px-4 text-center font-mono text-xs leading-4 text-text-tertiary">
           {placeholderLabel}
