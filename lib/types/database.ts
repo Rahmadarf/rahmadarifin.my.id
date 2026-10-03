@@ -57,8 +57,12 @@ export type ProjectRow = {
   note_label: string | null;
   note_body: string | null;
   tech_tags: string[];
+  year: string | null;
+  role: string | null;
+  status_label: string | null;
   thumbnail_path: string | null;
   cover_path: string | null;
+  gallery_paths: string[];
   repo_url: string | null;
   live_url: string | null;
   is_featured: boolean;

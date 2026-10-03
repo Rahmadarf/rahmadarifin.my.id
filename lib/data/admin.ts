@@ -27,7 +27,11 @@ export async function listOwnProjects(): Promise<ProjectView[]> {
   if (error || !data) return [];
 
   const urls = await signOwnerMediaUrls(
-    data.flatMap((row) => [row.thumbnail_path, row.cover_path]),
+    data.flatMap((row) => [
+      row.thumbnail_path,
+      row.cover_path,
+      ...(row.gallery_paths ?? []),
+    ]),
   );
 
   return data.map((row) => ({
@@ -36,6 +40,9 @@ export async function listOwnProjects(): Promise<ProjectView[]> {
       ? (urls.get(row.thumbnail_path) ?? null)
       : null,
     coverUrl: row.cover_path ? (urls.get(row.cover_path) ?? null) : null,
+    galleryUrls: (row.gallery_paths ?? [])
+      .map((path) => urls.get(path))
+      .filter((url): url is string => Boolean(url)),
   }));
 }
 

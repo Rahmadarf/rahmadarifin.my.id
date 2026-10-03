@@ -20,6 +20,8 @@ import type {
 export type ProjectView = ProjectRow & {
   thumbnailUrl: string | null;
   coverUrl: string | null;
+  /** Signed gallery URLs, in stored order, with unsignable entries dropped. */
+  galleryUrls: string[];
 };
 
 export type PublicProfile = Pick<
@@ -29,7 +31,11 @@ export type PublicProfile = Pick<
 
 async function attachProjectMedia(rows: ProjectRow[]): Promise<ProjectView[]> {
   const urls = await signPublicMediaUrls(
-    rows.flatMap((row) => [row.thumbnail_path, row.cover_path]),
+    rows.flatMap((row) => [
+      row.thumbnail_path,
+      row.cover_path,
+      ...(row.gallery_paths ?? []),
+    ]),
   );
 
   return rows.map((row) => ({
@@ -38,6 +44,11 @@ async function attachProjectMedia(rows: ProjectRow[]): Promise<ProjectView[]> {
       ? (urls.get(row.thumbnail_path) ?? null)
       : null,
     coverUrl: row.cover_path ? (urls.get(row.cover_path) ?? null) : null,
+    // Order is the stored order. A path that failed to sign is dropped rather
+    // than rendered as a gap in the grid.
+    galleryUrls: (row.gallery_paths ?? [])
+      .map((path) => urls.get(path))
+      .filter((url): url is string => Boolean(url)),
   }));
 }
 

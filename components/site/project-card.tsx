@@ -40,28 +40,14 @@ function Meta({
   );
 }
 
-function Stack({ tags }: { tags: string[] }) {
-  if (!tags.length) return null;
-
-  return (
-    <p className="font-mono text-xs leading-[18px] text-text-secondary">
-      {tags.join(" · ")}
-    </p>
-  );
-}
-
 export function ProjectCard({
   project,
   variant = "default",
-  index,
 }: {
   project: ProjectView;
-  variant?: "default" | "featured" | "row";
-  /** 1-based position, shown as the mono index on the /projects rows. */
-  index?: number;
+  variant?: "default" | "featured";
 }) {
   if (variant === "featured") return <FeaturedCard project={project} />;
-  if (variant === "row") return <ProjectRow project={project} index={index ?? 1} />;
 
   return <HomeCard project={project} />;
 }
@@ -164,7 +150,7 @@ function FeaturedCard({ project }: { project: ProjectView }) {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Live demo <span className="hover-arrow-up">&#8599;</span>
+                  Live demo <span className="hover-arrow-up inline-block">&#8599;</span>
                 </a>
               </Button>
             ) : null}
@@ -197,7 +183,7 @@ function HomeCard({ project }: { project: ProjectView }) {
           <Meta project={project} />
           <span
             aria-hidden
-            className="hover-arrow shrink-0 text-sm leading-4 transition-colors group-hover:text-foreground"
+            className="hover-arrow inline-block shrink-0 text-sm leading-4 transition-colors group-hover:text-foreground"
           >
             &#8599;
           </span>
@@ -236,140 +222,5 @@ function TagRow({ tags }: { tags: string[] }) {
         </span>
       ))}
     </div>
-  );
-}
-
-/**
- * A row on /projects: index, thumbnail, copy and links in four columns on
- * desktop. Below `lg` the same content becomes the bordered card the mobile
- * frame draws, so the two shapes are rendered separately rather than coerced
- * out of one set of flex rules.
- */
-function ProjectRow({
-  project,
-  index,
-}: {
-  project: ProjectView;
-  index: number;
-}) {
-  const position = String(index).padStart(2, "0");
-
-  return (
-    // One wrapper per project so the list's `divide-y` sees a single child.
-    // Without it the hidden half of each pair would still take a rule and the
-    // desktop list would double its first line.
-    <div>
-      {/* Mobile: card */}
-      <article className="group flex flex-col overflow-hidden rounded-md border border-border bg-surface transition-colors hover:border-input lg:hidden">
-        <MediaFrame
-          src={project.thumbnailUrl}
-          alt={`Pratinjau ${project.title}`}
-          className="hover-zoom h-[200px] w-full"
-          sizes="100vw"
-        />
-
-        <div className="flex flex-col gap-2.5 p-5">
-          <Meta project={project} />
-
-          <h2 className="text-[22px] leading-7 tracking-[-0.02em]">
-            <Link href={`/projects/${project.slug}`} className="hover:text-primary">
-              {project.title}
-            </Link>
-          </h2>
-
-          {project.summary ? (
-            <p className="text-[15px] leading-6 text-text-secondary">
-              {project.summary}
-            </p>
-          ) : null}
-
-          <Stack tags={project.tech_tags} />
-        </div>
-
-        <div aria-hidden className="h-px w-full bg-border" />
-
-        <div className="flex flex-wrap gap-x-5 gap-y-2 p-5">
-          <ProjectLinks project={project} />
-        </div>
-      </article>
-
-      {/* Desktop: row */}
-      <article className="group hidden gap-10 py-8 lg:flex">
-        <p className="w-10 shrink-0 font-mono text-[13px] leading-[18px] text-text-secondary">
-          {position}
-        </p>
-
-        <MediaFrame
-          src={project.thumbnailUrl}
-          alt={`Pratinjau ${project.title}`}
-          className="hover-zoom h-[180px] w-[300px] shrink-0 rounded-md border border-border transition-colors group-hover:border-input"
-          sizes="300px"
-        />
-
-        <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-          <Meta project={project} />
-
-          <h2 className="text-[28px] leading-[34px] tracking-[-0.03em]">
-            <Link href={`/projects/${project.slug}`} className="hover:text-primary">
-              {project.title}
-            </Link>
-          </h2>
-
-          {project.summary ? (
-            <p className="max-w-[520px] text-[15px] leading-6 text-text-secondary">
-              {project.summary}
-            </p>
-          ) : null}
-
-          <Stack tags={project.tech_tags} />
-        </div>
-
-        <div className="flex w-40 shrink-0 flex-col gap-2">
-          <ProjectLinks project={project} />
-        </div>
-      </article>
-    </div>
-  );
-}
-
-function ProjectLinks({ project }: { project: ProjectView }) {
-  return (
-    <>
-      {project.repo_url ? (
-        <ExternalLink href={project.repo_url}>Repository</ExternalLink>
-      ) : null}
-
-      {project.live_url ? (
-        <ExternalLink href={project.live_url}>Live site</ExternalLink>
-      ) : (
-        <span className="text-[13px] leading-[18px] text-text-tertiary">
-          No live link yet
-        </span>
-      )}
-    </>
-  );
-}
-
-export function ExternalLink({
-  href,
-  children,
-  className,
-}: {
-  href: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={cn(
-        "text-sm font-medium leading-[18px] text-primary hover:underline",
-        className,
-      )}
-    >
-      {children} <span className="hover-arrow-up">&#8599;</span>
-    </a>
   );
 }
