@@ -102,7 +102,7 @@ export function HeroSection({
                     className="text-text-secondary transition-colors hover:text-foreground"
                   >
                     {SOCIAL_LABELS[link.platform]}{" "}
-                    <span className="hover-arrow-up">&#8599;</span>
+                    <span className="hover-arrow-up inline-block">&#8599;</span>
                   </a>
                 </li>
               ))}

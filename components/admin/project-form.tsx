@@ -11,6 +11,7 @@ import {
 } from "@/components/admin/field";
 import { FormFeedback, SubmitButton } from "@/components/admin/form-feedback";
 import { MediaUpload } from "@/components/admin/media-upload";
+import { MediaGalleryUpload } from "@/components/admin/media-gallery-upload";
 import { saveProject } from "@/lib/actions/portfolio";
 import { initialActionState } from "@/lib/actions/state";
 import type { ProjectView } from "@/lib/data/portfolio";
@@ -95,6 +96,44 @@ export function ProjectForm({
             error={errors.category}
           />
         </Field>
+
+        {/* The detail page's meta strip. Any cell left empty is not rendered. */}
+        <div className="grid gap-4 md:grid-cols-3">
+          <Field label="Year" htmlFor="year" error={errors.year}>
+            <TextField
+              name="year"
+              maxLength={40}
+              placeholder="2026"
+              defaultValue={project?.year ?? ""}
+              error={errors.year}
+            />
+          </Field>
+
+          <Field label="Role" htmlFor="role" error={errors.role}>
+            <TextField
+              name="role"
+              maxLength={120}
+              placeholder="Design & development"
+              defaultValue={project?.role ?? ""}
+              error={errors.role}
+            />
+          </Field>
+
+          <Field
+            label="Status"
+            htmlFor="status_label"
+            error={errors.status_label}
+            hint="Status editorial, bukan draft/published."
+          >
+            <TextField
+              name="status_label"
+              maxLength={60}
+              placeholder="In progress"
+              defaultValue={project?.status_label ?? ""}
+              error={errors.status_label}
+            />
+          </Field>
+        </div>
 
         <Field
           label="Tech Tags"
@@ -263,6 +302,15 @@ export function ProjectForm({
             initialUrl={project?.coverUrl ?? null}
           />
         </div>
+
+        <MediaGalleryUpload
+          name="gallery_paths"
+          ownerId={ownerId}
+          kind="covers"
+          label="Screens (galeri halaman detail)"
+          initialPaths={project?.gallery_paths ?? []}
+          initialUrls={project?.galleryUrls ?? []}
+        />
 
         <div className="grid gap-4 md:grid-cols-2">
           <StatusField

@@ -84,6 +84,9 @@ export const projectSchema = z
     title: requiredText(120, "Nama proyek"),
     slug: text(80),
     category: optionalText(60),
+    year: optionalText(40),
+    role: optionalText(120),
+    status_label: optionalText(60),
     summary: optionalText(2000),
     description: optionalText(4000),
     detail_heading: optionalText(120),
@@ -93,6 +96,8 @@ export const projectSchema = z
     tech_tags: list(/,/, 12, 40),
     thumbnail_path: mediaPath,
     cover_path: mediaPath,
+    // One storage path per line, in display order.
+    gallery_paths: list(/\r?\n/, 12, 512),
     repo_url: httpUrl("Repo link"),
     live_url: httpUrl("Live link"),
     is_featured: checkbox,

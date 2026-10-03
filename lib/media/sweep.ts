@@ -66,7 +66,7 @@ async function referencedPaths(
   const [projects, profile] = await Promise.all([
     supabase
       .from("projects")
-      .select("thumbnail_path, cover_path")
+      .select("thumbnail_path, cover_path, gallery_paths")
       .eq("owner_id", ownerId),
     supabase
       .from("profile")
@@ -80,6 +80,9 @@ async function referencedPaths(
   for (const row of projects.data ?? []) {
     if (row.thumbnail_path) paths.add(row.thumbnail_path);
     if (row.cover_path) paths.add(row.cover_path);
+    // Gallery entries are referenced too; without this the sweep would treat
+    // every screenshot on the detail page as an orphan and delete it.
+    for (const path of row.gallery_paths ?? []) paths.add(path);
   }
   if (profile.data?.photo_path) paths.add(profile.data.photo_path);
 

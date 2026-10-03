@@ -292,9 +292,13 @@ html[data-splash="show"] .splash-overlay {
     scale: 1.03;
   }
 
+  /* No `display` here on purpose. These rules are unlayered, so a display
+     declaration would outrank Tailwind's `lg:hidden` at the call sites. The
+     call sites carry `inline-block` themselves — translate needs it. */
   .hover-arrow,
-  .hover-arrow-up {
-    display: inline-block;
+  .hover-arrow-up,
+  .hover-arrow-x,
+  .hover-arrow-next {
     transition: translate 150ms ease-out;
   }
   .group:hover .hover-arrow {
@@ -302,6 +306,14 @@ html[data-splash="show"] .splash-overlay {
   }
   a:hover > .hover-arrow-up {
     translate: 0 -1px;
+  }
+  /* Sideways only: the /projects rows and the next-project block both point
+     along the reading direction rather than out of the page. */
+  .group:hover .hover-arrow-x {
+    translate: 2px 0;
+  }
+  .group:hover .hover-arrow-next {
+    translate: 4px 0;
   }
 }
 
@@ -314,13 +326,17 @@ html[data-splash="show"] .splash-overlay {
     scale: none;
   }
   .group:hover .hover-arrow,
+  .group:hover .hover-arrow-x,
+  .group:hover .hover-arrow-next,
   a:hover > .hover-arrow-up {
     translate: none;
   }
   .hover-lift,
   .hover-zoom img,
   .hover-arrow,
-  .hover-arrow-up {
+  .hover-arrow-up,
+  .hover-arrow-x,
+  .hover-arrow-next {
     transition: none;
   }
 }
